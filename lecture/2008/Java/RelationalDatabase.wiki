@@ -1,0 +1,531 @@
+@title("リレーショナルデータベース")
+
+= リレーショナルデータベース
+
+== データベースって何？
+
+データが含まれていれば、それはテキストファイルでも、画像ファイルでも、データベースと呼んでいいでしょう。iTunesでも音楽データを管理するのにデータベースを使っていますし、アーティスト-アルバム-楽曲というフォルダ構成も、データベースといってもいいかもしれません。
+
+既にファイルの読み書きの方法を知っていればデータベースの作成は原理的に可能です。実際、世の中のデータベース管理システム(DBMS: Database Management System)は、突き詰めれば、ファイルの読み書きで実装されています。
+
+ただし、ディスク上のファイルは一次元配列でしかありません。その一本の配列にのようにデータを書き込めば、データを壊すことなく保存でき、再び取り出せるようになるのか。また、新しいデータの追加できるようにデータの配置を管理するなど、単にディスクにデータを保存するといっても、さまざまな工夫が必要です。さらに、データの検索を早くするために、HashMap, TreeMapなどの索引構造を、ディスク上に作成する必要があります（索引のためのデータ構造としてはB+-treeを使うのが一般的です）。
+
+ですから、単純なフォルダやファイルというよりも、コンピューターから高速に{b|データを検索、更新しやすい形で整理・保存されているもの}を、一般にデータベースということが多いようです。そして、データベースを作成、更新、検索するためのシステム、ソフトウェアを{b|データベース管理システム(DBMS)}と言います。
+
+== リレーショナルデータベース
+
+今回の演習で扱うデータベースは、{b|リレーショナルデータベース}（Relational Database, 関係データベース)というもので、表（テーブル)形式でデータを持つデータベースです。
+
+{b|staff} table
+<html>
+<table border="1" rules="rows" cellPadding="5">
+<tr bgcolor="#3399CC" style="color:white;">
+  <th>id</th>
+  <th>name</th>
+  <th>email</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td>Taro L. Saito</td>
+  <td>xxx@xxx.xxxxx</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>Yoichiro Nakatani</td>
+  <td>yyy@xxx.xxxxx</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>Jun Yoshimura</td>
+  <td>zzz@xxx.xxxxx</td>
+</tr>
+</table>
+</html>
+
+{b|lecture} table
+<html>
+<table border="1" rules="rows" cellPadding="5">
+<tr bgcolor="#3399CC" style="color:white;">
+  <th>person_id</th>
+  <th>name</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td>情報生命科学演習</td>
+</tr>
+<tr>
+  <td>1</td>
+  <td>生物情報科学実習</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>生物情報科学実習</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>生物情報科学実習</td>
+</tr>
+</table>
+</html>
+
+
+このテーブルデータは、講義を担当しているstaffのリストと、それぞれが担当している講義lectureを表にしたものです。
+
+このようなテーブルデータを作るために、リレーショナルデータベースシステムに SQL言語を用いて、上記のフォーマットのテーブルを作りなさい、行データを追加しなさいという指示を出すことになります。
+
+= SQL 
+
+{b|SQL} (エスキューエル。海外ではsequel(シークェル)と呼ぶ人が多い）は、{b|問い合わせ言語(query language)}と言われ、データベースからデータを取り出す命令を記述できます。
+
+今回の演習ではSQLite http://www.sqlite.org/ を使うので、こちらのSQLの構文マニュアル(http://www.sqlite.org/lang.html )を参考にしてください。
+
+== テーブルの作成 (create table)
+上記のテーブル形式のデータを作成するには、create table文を使います。
+
+<code>
+create table staff (
+  id integer primary key not null,
+  name text,
+  email text
+);
+</code>
+
+create table文の書式は以下の通りです
+<code>
+create table テーブル名 (
+  (カラム名) (データ型名）(型の制約...)? ,
+  ...
+);
+</code>
+
+Javaのクラス定義の仕方と似ていますが、使えるデータ型の種類がデータベースシステム毎に決まっています。通常、いろいろなシステムに共通して使えるのは以下のデータ型です。
+
+<code>
+integer   整数
+real　　　浮動小数点数 
+text　　　文字列
+datetime  日時を表す型
+</code>
+
+id integerの後ろについている{b|primary key} (主キー)という指定は、その列の値(id)は、重複してはいけない、ということを意味します。すなわち、テーブル中に同じidの値を持ったデータが存在してはいけない、という意味です。primary keyは、テーブル中から、一意に行を特定するために使われます。
+
+{i|not null}は、空っぽのデータをその列に入れてはいけないという指示です。
+
+lectureテーブルを作るSQLは、以下のようになります。
+<code>
+create table lecture (
+  person_id integer not null,
+  name text  
+);
+</code>
+
+lectureテーブルでは、person_idは重複があってもOKです。
+
+== データの挿入　(insert)
+
+テーブルを作成後、insert文を使い、データを挿入していきます。
+
+<code>
+insert into staff values('1', 'Taro L. Saito', 'xxx@xxx.xxxxx');
+insert into staff values('2', 'Yoichiro Nakatani', 'yyy@xxx.xxxxx');
+insert into staff values('3', 'Jun Yoshimura', 'zzz@xxx.xxxxx');
+
+insert into lecture values('1', '情報生命科学演習');
+insert into lecture values('1', '生物情報科学演習');
+insert into lecture values('2', '生物情報科学演習');
+insert into lecture values('3', '生物情報科学演習');
+</code>
+
+insert文の書式は以下の通り
+<code>
+insert into テーブル名 values('列データ', ...)
+</code> 
+
+
+== データの検索　(select)
+データベースの検索にはselect文を使います。
+
+<code>
+select カラム名, ... from テーブル名,... 
+where 検索条件 
+order by 順序指定 
+limit 取得する件数 offset スキップする件数
+</code>
+
+where, order by, limit offsetなどは、オプションです。
+
+=== staffテーブル中の全部のデータを検索
+
+以下は、sqliteデータベースでSQLを実行した例
+<code>
+sqlite> select * from staff;
+1|Taro L. Saito|xxx@xxx.xxxxx
+2|Yoichiro Nakatani|yyy@xxx.xxxxx
+3|Jun Yoshimura|zzz@xxx.xxxxx
+</code>
+
+
+=== staffテーブル中の、特定の列だけを検索
+<code>
+sqlite> select id,email from staff;
+1|xxx@xxx.xxxxx
+2|yyy@xxx.xxxxx
+3|zzz@xxx.xxxxx
+</code>
+
+=== 条件検索 (where)
+<code>
+sqlite> select * from staff where id = 3;
+3|Jun Yoshimura|zzz@xxx.xxxxx
+</code>
+
+where文を使うと条件を指定してテーブルデータを検索できます。
+
+=== 条件検索 (and, or)
+
+where節中で{b|and}, {b|or}を使うと複雑な条件を記述できます。
+
+<code>
+sqlite> select * from staff where name = 'Taro L. Saito' and email = 'xxx@xxx.xxxxx';
+1|Taro L. Saito|xxx@xxx.xxxxx
+</code>
+
+=== 行数のカウント (count)
+
+<code>
+sqlite> select count(*) from staff;
+3
+</code>
+
+<code>
+sqlite> select count(*) from staff where id = 3;
+1
+</code>
+
+
+=== 並び替え (order by 昇順)
+<code>
+sqlite> select * from staff order by name;
+3|Jun Yoshimura|zzz@xxx.xxxxx
+1|Taro L. Saito|xxx@xxx.xxxxx
+2|Yoichiro Nakatani|yyy@xxx.xxxxx
+</code>
+
+=== 並び替え (order by 降順)
+descをつけると、降順になります。
+
+<code>
+sqlite> select * from staff order by name desc;
+2|Yoichiro Nakatani|yyy@xxx.xxxxx
+1|Taro L. Saito|xxx@xxx.xxxxx
+3|Jun Yoshimura|zzz@xxx.xxxxx
+</code>
+
+=== limit, offset 指定
+データ数が大きくなると、検索結果を10個に限定したり、先頭からいくつかデータをスキップしたいという場合があります。
+
+<code>
+sqlite> select * from staff limit 2;
+1|Taro L. Saito|xxx@xxx.xxxxx
+2|Yoichiro Nakatani|yyy@xxx.xxxxx
+</code>
+
+<code>
+sqlite> select * from staff limit 2 offset 2;
+3|Jun Yoshimura|zzz@xxx.xxxxx
+</code>
+
+
+
+
+== テーブルの結合 (join)
+
+from部分に二つ以上テーブルを書きます
+<code>
+sqlite> select staff.id, staff.name, lecture.name from staff, lecture where id = person_id;
+1|Taro L. Saito|情報生命科学演習
+1|Taro L. Saito|生物情報科学演習
+2|Yoichiro Nakatani|生物情報科学演習
+3|Jun Yoshimura|生物情報科学演習
+</code>
+
+left join（左側のテーブルデータの各行に対して、右側で指定されたテーブルデータを条件に基づいて結合していく）を使って書くこともできる。
+<code>
+sqlite> select staff.id, staff.name, lecture.name from staff left join lecture on id = person_id;
+1|Taro L. Saito|情報生命科学演習
+1|Taro L. Saito|生物情報科学演習
+2|Yoichiro Nakatani|生物情報科学演習
+3|Jun Yoshimura|生物情報科学演習
+</code>
+
+
+== 集約 (group by)
+
+上のjoinで得られた結果に対して、staff.idが同じ行を、ひとつの行にまとめる. (group by staff.id)
+<code>
+sqlite> select staff.id, staff.name, group_concat(lecture.name, ',') from staff left join lecture on id = person_id group by staff.id;
+1|Taro L. Saito|情報生命科学演習,生物情報科学演習
+2|Yoichiro Nakatani|生物情報科学演習
+3|Jun Yoshimura|生物情報科学演習
+</code>
+
+group_concat(lecture.name, ',') は、集約演算で、文字列のリストを、','でつないで結合する、という意味。
+
+== 集約演算 (aggregate function)
+
+group_concat以外にも、avg, count, min, max, sumなどで、複数のデータを集約することができます。group byを使って複数行を１つにまとめるときは、まとめられる行には集約演算を使わなくてはなりません。
+
+<code>
+select 集約演算(列名) from ..　group by グループを決めるための列
+</code>
+
+{b|exam_score} table
+<html>
+<table border="1" rules="rows" cellPadding="5">
+<tr bgcolor="#3399CC" style="color:white;">
+  <th>id</th>
+  <th>gender</th>
+  <th>class</th>
+  <th>score</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td>female</td>
+  <td>A</td>
+  <td>50</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>male</td>
+  <td>A</td>
+  <td>30</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>male</td>
+  <td>B</td>
+  <td>80</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>female</td>
+  <td>B</td>
+  <td>70</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>female</td>
+  <td>C</td>
+  <td>90</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>male</td>
+  <td>C</td>
+  <td>75</td>
+</tr>
+</table>
+</html>
+
+===クラス毎の試験の平均点を求めるSQL
+<code>
+sqlite> select class, avg(score) from exam_score group by class;
+A|40.0
+B|75.0
+C|82.5
+</code>
+
+=== 平均、最小、最大、idのリストを同時に計算
+<code>
+sqlite> select class, avg(score), min(score), max(score), group_concat(id) from
+exam_score group by class;
+A|40.0|30|50|1,2
+B|75.0|70|80|3,4
+C|82.5|75|90|5,6
+</code>
+
+=== 他の観点から集約
+
+性別ごと
+<code>
+sqlite> select gender, avg(score) from exam_score group by gender;
+female|70.0
+male|61.6666666666667
+</code>
+
+各クラスの性別ごとに集約 (group byのあとに2つ以上つなげる）
+<code>
+sqlite> select class, gender, avg(score) from exam_score group by gender, class;
+A|female|50.0
+B|female|70.0
+C|female|90.0
+A|male|30.0
+B|male|80.0
+C|male|75.0
+</code>
+
+== 行の更新 (update)
+
+行データの一部分を更新
+<code>
+sqlite> insert into staff values('4', 'Atsushi Sasaki', 'aaa@bbb.ccc');
+sqlite> select * from staff where id = '4';
+4|Atsushi Sasaki|aaa@bbb.ccc
+
+sqlite> update staff set email = 'zzz@xxx.xxx' where id = '4';
+sqlite> select * from staff where id = '4';
+4|Atsushi Sasaki|zzz@xxx.xxx
+sqlite>
+</code>
+
+setのあとには、複数の値の設定をカンマでつなげて記述できる。
+
+== テーブルの削除
+
+<code>
+drop table if exists (テーブル名);
+</code>
+
+== SQLの検索結果を使って、テーブルにデータを挿入
+
+<code>
+insert into (テーブル名) (select文）
+</code>
+
+
+
+= データベースを使ってみよう
+
+== 準備 SQLiteのインストール
+
+===コマンドラインで扱えるSQLiteのバイナリをダウンロード
+* http://www.sqlite.org/download.html
+** Windows版　http://www.sqlite.org/sqlite-3_6_1.zip 
+*** sqlite3.exeが含まれる。sqlite3.exeを、環境変数PATHから見える位置に置くと、コマンドプロンプトやcygwinから使えるようになります。
+
+** PATH変数はコマンドプロンプトからは、PATHコマンド. cygwinからはecho $PATHで確認できます。
+
+== SQLiteを起動する
+
+<code>
+sqlite3 (作成したいデータベースファイル名、あるいは既存のデータベースファイル名)
+</code>
+で起動できます。ファイル名を入力しないとデータベースはメモリ上に作成されるだけで、sqlite終了後にはデータは消えてしまいます。
+
+<code>
+> sqlite3 staff.db
+SQLite version 3.5.1
+Enter ".help" for instructions
+sqlite> 
+</code>
+
+== sqliteの使い方を調べる
+<code>
+sqlite> .help
+.bail ON|OFF           Stop after hitting an error.  Default OFF
+.databases             List names and files of attached databases
+.dump ?TABLE? ...      Dump the database in an SQL text format
+.echo ON|OFF           Turn command echo on or off
+.exit                  Exit this program
+.explain ON|OFF        Turn output mode suitable for EXPLAIN on or off.
+.header(s) ON|OFF      Turn display of headers on or off
+.help                  Show this message
+.import FILE TABLE     Import data from FILE into TABLE
+.indices TABLE         Show names of all indices on TABLE
+.mode MODE ?TABLE?     Set output mode where MODE is one of:
+                         csv      Comma-separated values
+                         column   Left-aligned columns.  (See .width)
+                         html     HTML <table> code
+                         insert   SQL insert statements for TABLE
+                         line     One value per line
+                         list     Values delimited by .separator string
+                         tabs     Tab-separated values
+                         tcl      TCL list elements
+.nullvalue STRING      Print STRING in place of NULL values
+.output FILENAME       Send output to FILENAME
+.output stdout         Send output to the screen
+.prompt MAIN CONTINUE  Replace the standard prompts
+.quit                  Exit this program
+.read FILENAME         Execute SQL in FILENAME
+.schema ?TABLE?        Show the CREATE statements
+.separator STRING      Change separator used by output mode and .import
+.show                  Show the current values for various settings
+.tables ?PATTERN?      List names of tables matching a LIKE pattern
+.timeout MS            Try opening locked tables for MS milliseconds
+.width NUM NUM ...     Set column widths for "column" mode
+</code>
+
+== SQL文を入力
+<code>
+sqlite> create table staff (id integer primary key not null,  name text, email text);
+sqltie> insert into staff values('1', 'Taro L. Saito', 'xxx@xxx.xxxxxx');
+sqlite>
+</code>
+
+== データベースの内容を確認
+<code>
+sqlite> select * from staff;
+1|Taro L. Saito|xxx@xxx.xxxxxx
+sqlite>
+</code>
+
+== sqliteを終了する
+<code>
+sqlite> .quit
+</code>
+
+== テーブルを確認
+<code>
+sqlite> .tables
+staff
+sqlite>
+</code>
+
+== テーブルのスキーマ（データ構造)を確認
+<code>
+sqlite> .schema
+CREATE TABLE staff (id integer primary key not null, name text, email text);
+sqlite>
+</code>
+
+== ファイルに書かれているSQLを実行
+
+<code>
+sqlite> .read score.sql
+</code>
+
+=== score.sql
+<code>
+drop table if exists exam_score;
+create table exam_score (
+  id integer primary key autoincrement not null, 
+  gender text,
+  class text,
+  score integer
+);
+</code>
+
+<code>
+drop table if exists exam_score;
+</code>
+は、exam_scoreテーブルが存在していたら、テーブルを消す、という意味。
+
+== tab区切りデータをテーブルに読み込む
+
+=== score.tab
+<code>
+1	female	A	50
+2	male	A	30
+3	male	B	80
+4	female	B	70
+5	female	C	90
+6	male	C	75
+</code>
+
+=== 読み込む
+.separatorでタブを区切り文字に指定。.importでテーブルに、ファイルからデータを読み込む。
+<code>
+.separator \t
+.import score.tab exam_score
+</code>
+

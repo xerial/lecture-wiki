@@ -1,0 +1,323 @@
+
+@title("2011年度 生物情報科学科 情報基礎実験 - プログラム開発環境の構築")
+
+{b|2011年度 生物情報科学科 情報基礎実験 資料} 2011年4月8日
+= プログラム開発環境の構築
+
+ここでは、C, C++, Javaプログラミング言語の開発環境の構築について説明します。
+
+* この資料のWebページ
+**http://www.xerial.org/wiki/lecture/2011/Index
+* 担当：斉藤 太郎 (http://www.xerial.org/leo)
+
+// = メーリングリスト
+
+= C/C++開発環境のセットアップ
+
+以下のうちどれか一つがインストールできればよいです。最初のうちはVisual Studio使いやすく、プログラミングに習熟してからも十分使える開発環境ですので、今のうちに使い方に慣れておくとよいでしょう。
+
+== Windows
+* Microsoft Visual Studio C++ (Express Edition: 無償で利用できる)
+* MinGW  (Windowsに移植されたgcc, g++)
+* Cygwin (Windows上で、gccなどのUNIXコマンドを使えるようにする環境。便利）
+
+== Linux 
+* gcc (GNU C Compiler), g++ (GNU C++ compiler)
+通常は標準でインストールされているので特に作業は必要ありません。
+
+== Mac OS X
+* XCode (Mac OS Xのインストールディスクに入っています）
+** http://developer.apple.com/TOOLS/Xcode/
+** XCodeをインストールするとMac OSでgcc, g++などが使えるようになります
+
+
+= Visual Studio C++ のインストール (Windows)
+無料で利用できるVisual C++ 2010 Express Edition （英語版）を使います。日本語版も使えますが、コンピューター関連の技術は日本語より英語圏の情報の方が質もよく量も豊富（つまり困った時に検索しやすい）ので、今のうちから英語に慣れておきましょう。急がば回れです。
+
+(以下のスクリーンショットはVisual Stduio 2008のものですが、2010でもほとんど同じ手順です）
+
+* ダウンロードページ  http://www.microsoft.com/express/download/ から、以下を選択:
+[image/vc-express.png]
+
+* SQL Server（データベースシステム）をインストールするか聞かれますが、今回は必要ないのでチェックを外します：
+[image/vc-check.png]
+
+* 次の画面に進みます：
+[image/vc-install.png]
+
+* ネットから必要なファイルがダウンロードされ、Visual Studioがインストールされます（再起動が必要になります）：
+[image/vc-progress.png]
+
+= プログラムの開発の手順
+
+== Solution, Projectの作成
+* まず新しいProjectを作成します
+[image/vc-project.png]
+
+* General - Empty Projectを選択します
+[image/vc-newsolution.png]
+** {b|Empty Project}を選択しないと、Visual Studioでしか実行できないコードになってしまいます。これは、普段はWindowsで開発し、あとでLinuxのマシンでもgcc, g++でコンパイルする場合に困らないようにするためです。
+
+* １つのSolutionの中には複数のProjectを作成できます。１つのProjectが１つの実行ファイル(.exe)に対応していて、複数の.exeファイルを作成したい場合は、Solution中にもう1つProjectを作成します。
+
+== ソースコードの作成
+* プロジェクトには次のものが含まれます
+** Header Files：.h, .hppファイルを置く場所
+** Source Files: .c, .cppファイルを置く場所
+
+* mainを含むソースコードを作成します。Source Files - New Item - C++ File (.cpp) を選択、ファイル名を指定する
+[image/vc-newitem.png]
+
+* コードを書きます
+[image/vc-main.png]
+** Project中には、main関数を含んだコード(.cppファイル）を必ず１つだけ用意する必要があります
+<code>
+int main(int argc, char** argv)
+{
+  ...
+  return 0;  // 0 は正常終了、0以外は何らかのエラーが起こったことを示す
+}
+</code>
+
+== コンパイル
+* Visual Studioではソースコードをコンパイルし、コンパイルしたソースコードを結合（リンク）する作業をまとめてBuildと呼んでいます。メニューから選ぶか、F7を押すと簡単です。
+[image/vc-build.png]
+
+** 正常終了した場合
+[image/vc-buildlog.png]
+
+* 実行ファイルがプロジェクトのフォルダ中に作成されます. この例の場合は、"Debug/SuffixArray.exe"というファイルができています。以下のように、コマンドラインから直接プログラムを実行することもできます。
+[image/vc-artifact.png]
+** このコンソール画面はCygwin + TeraTermによるもの。Visual Studioをインストールしたときについてくる、Visual Studio 2008 Comand Promptを使ってもよいです
+[image/vc-prompt.png]
+
+== プログラムの実行
+試しに作成したプログラムを実行するには、{b|Start Without Debugging}を選択するか、Ctrl+F5を押します。
+[image/vc-start-wo-debug.png]
+*実行結果
+[image/vc-hello.png]
+
+===コマンドライン引数の設定
+コマンドライン引数をプログラムに渡すには、ProjectのProepertiesページを開き、Debug - Command Argumetnsの欄で設定します。
+
+[image/vc-args.png]
+
+== プログラムのデバッグ
+プログラムの実行中の様子（変数の値など）を確認するには、{b|ブレークポイント}を設定します。プログラムの実行を一時停止したい部分の左端をダブルクリックします。
+*ブレークポイントの設定
+[image/vc-breakpoint.png]
+
+===デバッグ実行
+プログラムの実行をブレイクポイントの位置で止めたい場合は、Debug - Start Debugging (F5)を選択します。
+* ブレークポイントで一時停止中。変数の内容や、Call Stackの状態が確認できます:
+[image/vc-debug.png] 
+
+* Step実行で、プログラムの実行を進められます
+[image/vc-step.png]
+** Step Into (F11): 関数呼び出しの内部まで入る
+** Step Over (F10): 次の行まで実行を進める
+** Steo Out (Shift+F11): 現在の実行中の関数の呼び出し元に戻るまで進める
+
+
+== Debug, Releaseビルドの違い
+Visual Studioでは、ビルドの仕方にDebugビルド、Releaseビルドがあります。
+*Debugビルドはブレークポイントなどをつかってプログラムを停止すると、Call Stackなどの情報が詳細に表示されます
+*Releaseビルドでは、Debugビルドには含まれるデバッグ用の情報を削るので、プログラムの動作がDebugビルドより高速になりますが、Debugのための情報がほとんど得られません。本番環境ではReleaseビルドされたものを使います。
+
+=== Debug, Releaseビルドの切り替え
+[image/vc-release.png]
+
+
+* .exeファイルが出力されるフォルダも変わります
+[image/vc-debrel.png]
+
+== C++開発でぜひ押さえておきたいライブラリ
+=== STL (Standard Template Library) 
+* http://www.sgi.com/tech/stl/
+* vector, list, map, setなどの基本的なデータ構造や、そのようなデータ構造を扱うためのalgorithm（検索、探索、copyなど）の実装が含まれる
+
+=== Boost C++ Libraries 
+* http://www.boost.org/
+* C++を書きやすくするためのライブラリ
+** 正規表現処理の実装、ラムダ計算風に書けるライブラリ、メルセンヌツイスターによる乱数の生成など
+* Windows, Linux, Mac OS Xなどでポータブルなプログラミングをするのに便利
+** int32, int64などのデータ型や、どのOSでも動作するマルチスレッドライブラリなど
+* Boostの使い方の紹介：Let's Boost http://www.kmonos.net/alang/boost/
+
+= ポータブルなプログラムにするために
+
+C, C++の標準にしたがったコードを書けば、Visual Studioで作成したソースコードでも、LinuxやMac OS Xに持って行ってgcc, g++でコンパイルし直して実行することができます。参考までに
+
+=== MinGW (minimalist GNU for Windows) 
+*http://www.mingw.org/ 
+*Windows用にビルドされたGCCなどのツール. GCCでプログラムをコンパイルして、Windows用のexeファイルが作れます
+*インストール方法
+** http://sourceforge.net/projects/mingw/files/ から、MinGW-5.1.6.exeをダウンロード (2009年10月現在の最新版）して実行
+** 環境変数PATHの設定が必要
+
+=== Cygwin 
+* Windows上でUNIXコマンド(ls, cp, gcc, g++など）を実行する環境を整えられます
+* http://www.cygwin.com/
+
+=== Mac OS X
+* Mac OS XのInstall Disk中のXcode.pckgで、gcc, g++などのコンパイラをインストールできます
+
+= プログラムのビルドの自動化
+Visual Studio以外でプログラムのコンパイル、リンカーの実行を繰り返して間違えずにコマンドラインから実行するのは大変です。その作業を自動化するためにはMakefileを書くのが一般的です。
+
+* GNU Make 
+* OMake 
+** GNU Makeと同等の作業をもっと楽に記述できる。ファイルの更新をモニターして自動ビルドもしてくれる
+
+（後で簡単なMakefileの書き方などを追加します）
+
+= Javaの開発環境のセットアップ
+
+Eclipse (http://eclipse.org)は、Javaでプログラムを開発するためのIDE(統合開発環境）です。もちろん、テキストエディタとJava Compiler(javac)のみでも十分プログラムの開発は行えますが、Eclipseを用いるとより手軽にプログラムの開発が行えるようになります。Windows/Mac OS X/Linuxなどの種々のOSで利用できます。
+
+== Javaを学ぶ
+
+* Java言語でのプログラミングについては、2008年度 生物情報科学実験I Java基礎の講義資料を参考にしてください
+** http://www.xerial.org/wiki/lecture/2008/Java/Index
+
+== Java SDK のインストール
+* Javaの実行環境。Eclipseを動かすのに必要です
+* Java Web Page: http://java.sun.com/
+* Java SE Development Kit をダウンロード
+** JDK 6 Update 16 (2009年10月現在の最新版）を選択して、インストールします
+
+== Eclipseのインストール
+* Eclipseをダウンロードします　
+** http://www.eclipse.org/downloads/
+** Eclipse IDE for Java Developers を選択
+* ダウンロードしたzipファイルを解凍してできるeclipseフォルダの中のEclipse.exeを実行するだけです
+
+
+==Eclipseの主な特徴
+
+* Ctrl+SPACE でコードの補完（最初の数文字を入力すると、残りはタイプしなくても、候補が表示される）機能がある。メソッドの入力が簡便
+* また、テンプレート（雛型）機能を用いて、入力の手間を省くことができる
+* 表示しているファイルの移動が簡単
+* コードのデバッグ機能が充実
+
+* 入力しながら、コードの構文(syntax)エラーがわかるので、開発しやすい
+** C/C++用のIDEでここまでできるものは、見受けられない
+
+* JUnitによるテスト機能が統合されている。コードを書いたら即座にテストできる
+
+
+* カスタマイズ機能が充実
+** コードの色づけ、キーコマンドの設定、Emacsキーバインドが使える
+
+==Eclipseを起動する
+
+貸し出されたノードPCのデスクトップ上(Win + Dで表示できる）に、eclipseのアイコンがあるはずです。Eclipseを起動したら、workbenchを選択します。
+
+[image/eclipse-workbench.png]
+
+== Eclipseで新しいプロジェクトを作成する
+File - New - Java Projectの順に選択します。
+[image/new-project.png]
+
+プロジェクト名を入力します（たとえば、Java2008など）
+[image/project-name.png]
+
+Finishボタンを押して完了です。
+
+== クラスを作成する
+
+プロジェクトの上で右クリック - New - Classを選択
+[image/newclass.png]
+
+クラス名を入力する。HelloWorld.javaを作りたいなら、HelloWorldと入力して、Finishを押す。
+[image/create-helloworld.png]
+
+==プログラムを入力する
+
+[image/projectview.png]
+
+プログラムを打ち込む
+[image/helloworld.png]
+
+Ctrl + S (Ctrlキーを押しながらSを押す）とファイルが保存される。
+
+== ファイルの保存場所を確認する
+
+project viewのHelloWorld.javaの上で右クリック - Propertiesを選択。あるいは、テキストを編集中にAlt+Enterを押す。
+[image/property.png]
+
+ファイルがディスク上のどの位置にあるのか表示される。
+[image/filelocation.png]
+
+== プログラムを実行する
+
+HelloWorld.javaの上を右クリック（テキストエディタ内でも可）して、 Run As - Java Applicationを選択。
+[image/runas.png]
+
+コンソール画面に実行結果が表示される。
+[image/console.png]
+
+
+== コードの誤りを修正する
+
+コードが間違っている位置に赤線が引かれ、エラーがあるとわかる。下の例は行末のセミコロンを忘れている。
+[image/edit.png]
+エラーの内容は、Problemsタブに表示される。
+
+=== よくあるミス
+プログラム中の記号、セミコロンなどには全角文字は使えません。修正してCtrl+Sで保存後でもエラーが消えない場合、Javaの構文が全角文字で書かれていないか確認するとよいでしょう。
+
+== プログラムをデバッグする
+
+Eclipseでは、Javaプログラムの実行を途中で一時停止させ、変数の内容などを確認することができます。プログラムを途中で止める位置を{b|ブレークポイント}と呼びます。
+
+
+=== ブレークポイントを設定する
+ソースコードの左側のバーの部分で、ダブルクリックするとブレークポイントを置くことができます。ブレークポイントを消すには、同じ個所をもう一度ダブルクリックします。
+[image/breakpoint.png]
+
+
+=== デバッグモードでプログラムを実行する
+
+ブレークポイントでプログラムの動作を一時停止させたい場合、プログラムをデバッグモードで実行する必要があります。やり方はプログラムを実行するときとほぼ同じですが、Run Asではなく、Debug As - Java Applicationを選択します。
+
+[image/debugas.png]
+
+== デバッグ画面
+
+実行後、Debug Perspective（デバッグ用の画面）に移りますか？と聞かれた場合はYesを選択します。ブレークポイントの位置でプログラムの実行が停止します。
+
+[image/debug-perspective.png]
+
+=== ステップ実行
+Step-in, Step-Over, Step-Returnなどのボタンを押すと、プログラムの実行を少しずつ進めることができます。
+[image/step.png]
+
+Resumeボタンを押すと、次にブレークポイントにぶつかるまでプログラムを実行しつづけます。停止ボタンで、プログラムの実行を終了します。
+
+=== 変数の値の確認
+
+Variablesのタブで、変数の内容を確認することができます。値に変化のあった変数は、色つきで表示されます。
+[image/variable.png]
+
+
+== Perspective（画面モード）の切り替え
+
+Eclipseには、ソースコード編集用のJava Perspective, デバッグ用のDebug Perspectiveなどがあります。これらは画面右上のPerspectiveスイッチで切り替えることができます。
+
+[image/perspective.png]
+
+== 一度起動したプログラムの再実行
+
+一度、上の手順で実行したプログラムは、画面上のボタンから手軽に再実行することができます。
+[image/start.png]
+
+
+== 便利なショートカットキー(一部）
+
+<code>
+Ctrl+F8   Perspectiveの切り替え
+Ctrl+F7   Windowの切り替え
+Ctrl+S    ファイルの保存
+Ctrl+M    ウィンドウの最大化切り替え。テキストを大きく表示したいときなど
+</code>

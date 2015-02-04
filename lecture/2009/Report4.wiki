@@ -1,0 +1,355 @@
+
+@title("課題4 - 2009年度 生物情報科学科 情報基礎実験")
+
+
+
+=課題4
+
+External Sortingを実装する
+
+* 締切：　2010年2月末まで
+* 提出先： http://lecture.utgenome.org/exp2009/
+
+この文章のアドレス： http://www.xerial.org/wiki/lecture/2009/Report4
+
+= ヒント
+
+== External Merge Sort のアルゴリズム
+* 講義資料中のMultiway Merge Sort
+* Chapter 13: External Sorting
+** Raghu Ramakrishnan, Johannes Gehrke. Database Management Systems. 3rd Edition. 
+
+=== 入力：
+*タブ区切りのテーブルデータ
+*primary keyとして使う列番号と、データ型(整数、文字列、染色体名、strand)のリスト
+
+
+* 例：　(配列名, 染色体番号, start, end, strand)をタブ区切りで表現したデータ
+<code>
+SEQ000001	chr4	258276172	259137406	-
+SEQ000002	chr10	1789481587	1789590387	+
+SEQ000003	chr21	1099578295	1100575652	+
+SEQ000004	chr6	1359243304	1360081212	+
+SEQ000005	chr6	1001396483	1001761191	-
+</code>
+
+* キー:　　1:chrom, 2:int
+** (まず染色体順にデータを並び替えて、次にstart順で並び替える)
+
+=== 出力： 
+* ソートされたデータファイル
+<code>
+SEQ000001	chr4	258276172	259137406	-
+SEQ000005	chr6	1001396483	1001761191	-
+SEQ000004	chr6	1359243304	1360081212	+
+SEQ000002	chr10	1789481587	1789590387	+
+SEQ000003	chr21	1099578295	1100575652	+
+</code>
+
+== アルゴリズム
+* Bページ分のpage bufferをメモリ上に用意する　
+
+=== pass 0: 
+* テーブルデータを読み込んで、B個のpage bufferにレコードとして詰め込む
+* page buffer中の全レコードを指定されたキーでソートし、run(ソートしたデータを含むページ列)をディスクに書き出す
+
+(これをテーブルデータが全部なくなるまで繰り返し、runをいくつか作成する)
+
+=== pass 1, 2, ... : (B-way merge sort)
+* B個のrunを入力として、各runから１ページずつpage bufferに読み込む
+** 同時にページ内のレコードのソートも行う
+* B個のpage buffer中のデータをmerge sortして、出力用のpage buffer（１ページ分別に確保する）にレコードを書き出していく
+** 各runの入力を受け取るpage buffer中のデータがすべて出力されたら、runから次のページを読み出す
+* 出力用のpage bufferがいっぱいになったら、内容をディスクに書き出す　
+
+（この操作をB個のrunのデータを全て読み終わるまで続け、ディスクに出力された結果が次のpassのrunになる）
+
+（最終的に出力されるrunが一つになるまで、このpassを繰り返す）
+
+== Merge Sort
+* ソートされたrunを入力として受け取り、各runから一番小さい要素を取り出し、その中で最小のものから順に取り出していくアルゴリズム
+
+
+= 実装のためのヒント
+
+== page bufferの実装
+
+page size = 8KB とした場合
+<code>
+0                                                                  8K
+ ------------------------------------------------------------------
+| page header | r1 | r2 | ... .... | pointer to r2 | pointer to r1 |
+ ------------------------------------------------------------------
+</code>
+page headerには、ページのID、中に含まれているスキーマの情報、ページに含まれるレコード数などを書きこみます。テーブルの各行のデータ（record）は先頭から詰めていき、recordの開始位置へのポインター（pageの先頭からのoffset)の情報を、ページの後ろから追加していきます。
+
+=== Java
+Javaでbyte配列にデータを書き込むには、ByteBufferを使うと簡単です。
+<code>
+ByteBuffer buffer = ByteBuffer.alocate(8 * 1024);  // 8K分のバッファを確保
+buffer.position(8);  // 8 byte目にカーソルを移動
+buffer.putInt(100);  // 100というint型のデータ(4 bytes分)をバッファに書き込みカーソルを移動
+buffer.putInt(200);  
+
+buffer.position(8); 
+int v1 = buffer.readInt(); // v1 == 100
+int v2 = buffer.readInt(); // v2 == 200
+
+byte[] b = buffer.array(); // ByteBufferの内容をbyte[] 配列として取り出す
+</code>
+* http://java.sun.com/javase/6/docs/api/java/nio/ByteBuffer.html
+
+=== C++
+C++の場合でも、以下のようなByteBufferクラスを自作して、バッファ中に手軽にデータを書き込めるようにすると良いでしょう。
+<code>
+#include <memory>
+#include <iostream>
+#include <string>
+
+class ByteBuffer {
+private:
+  typedef unsigned char byte;
+  byte* buffer;
+  std::size_t cursor;
+  std::size_t size;
+public:
+  ByteBuffer(std::size_t bufferSize) {
+    buffer = new byte[bufferSize];
+    cursor = 0;
+    size = bufferSize;
+  } 
+  virtual ~ByteBuffer() {
+    delete[] buffer;
+  }
+  
+  void position(std::size_t offset) { cursor = offset; }
+  
+  int readInt() { 
+    byte* v = &buffer[cursor];
+    cursor += 4;
+    // read the int value written in big-endian 
+    return (v[0] << 24) | (v[1] << 16) | (v[2] << 8) | v[3];
+  }
+  
+  void putInt(int v) { 
+    // write the int value using big-endian
+    buffer[cursor++] = static_cast<byte>((v >> 24) & 0xFF);
+    buffer[cursor++] = static_cast<byte>((v >> 16) & 0xFF);
+    buffer[cursor++] = static_cast<byte>((v >> 8) & 0xFF);
+    buffer[cursor++] = static_cast<byte>(v & 0xFF);
+  }
+  
+  void putString(const std::string& s) {
+    const char* c = s.data();
+    putInt(static_cast<int>(s.length()));
+    memcpy(&buffer[cursor], c, s.length());
+    cursor += s.length();
+  }
+
+  std::string readString() {
+    std::size_t len = readInt();
+    std::string s((const char*) &buffer[cursor], len);
+    cursor += len;
+    return s;
+  }
+  
+};
+
+
+int main(int argc, char** argv) {
+  
+  ByteBuffer buf(1024);
+  
+  buf.putInt(1000);
+  buf.putInt(2000);  
+
+  buf.position(0);
+  int v1 = buf.readInt();
+  int v2 = buf.readInt();
+
+  std::cout << "v1=" << v1 << std::endl;
+  std::cout << "v2=" << v2 << std::endl;
+
+  buf.position(243);
+  buf.putString(std::string("hello world"));
+
+  buf.position(243);
+  std::string s = buf.readString();
+
+  std::cout << "s=" << s << std::endl;
+  
+  return 0;
+
+  // The output of this program
+  //
+  // v1=1000
+  // v2=2000
+  // s=hello world
+}
+</code>
+
+== 文字列データをページに埋め込む
+
+実際のコードでは、上のByteBufferを使うだけではなく、ページ内にレコードを格納するためのスペースが十分あるかどうかのチェックも加えることになります。また、テーブルの各行は可変長のデータなので、レコードのサイズとレコードのデータを共にページ内に書き込む必要があります。
+
+== 文字列のデータをバイト列に変換する方法
+
+=== C++
+
+std::stringの内部はchar型(1バイト)の配列で実装されていて、data()でその配列へのポインター、length() (or size()) で、配列の長さを取得できます。上記のByteBuffer中の、putStringを参考にしてください。
+
+* 参考： C++ Strings:  http://www.cppreference.com/wiki/string/start
+
+=== Java
+<code>
+String s = "hello world";
+byte[] b = s.getBytes("UTF-8");  // 文字列をUTF-8のバイト列に変換
+// b.lengh でバイトサイズを取得する
+</code>
+* 参考： http://java.sun.com/javase/6/docs/api/java/lang/String.html
+
+*注意: Javaでは、環境によってStringクラスの内部文字列で、1文字当たり2byteで表現する文字コードを使っている場合があります。C++と違ってJavaではchar型のサイズが2 bytesです。したがって、ASCII文字だけを扱っている場合、UTF-8などを指定しないとgetBytes()で得られるデータのサイズがやや大きめになることがあります。また、日本語文字列などをUTF-8形式にエンコードすると、1文字当たりの大きさが2～3bytesとばらつきがでてくるので、単純に2 x 文字数でバイトサイズを計算できないことに注意してください。
+
+== バイト列から文字列に変換する方法
+
+=== C++
+<code>
+
+// create a new string from the buffer[offset .. offset+len-1]
+std::string s((const char*) buffer, offset, len);
+</code>
+
+=== Java
+<code>
+byte[] buffer = new byte[1024];
+// load string data into the buffer
+
+String s = new String(buffer, offset, len, "UTF-8"); 
+</code>
+
+* 参照： http://java.sun.com/javase/6/docs/api/java/lang/String.html
+
+
+== page buffer内のレコードの並べ替え
+
+ページバッファー内のレコードr1, r2, .. のデータを書き換える必要はなく、ポインターの順番を並べ替えるだけで済みます。
+
+ページ中のレコードを並び替える方法は腕のみせどころで、いろいろな実装の仕方が考えられます。例えば、、、
+
+* (方法１) レコードを保存するためのクラスを作り、std::multiset (C++のSTL)、TreeSetなどに格納してソートする
+** C++では、"operator<" を定義して、レコードの順序を定義する必要があります
+** Javaでは、Comparable interfaceを実装して、レコードの順序を定義します
+** あるいは、std::vectorに保存してからsort (algorithmをinclude)します。 Javaなら、ArrayListに保存してから、Collections.sortを使って並び替えることもできます。
+
+** この方法では、STLやJavaのCollectionでソートしてから、レコード群をpage bufferに書き出すことになります。
+
+* (方法２) page bufferに保存されたレコードののキー部分（へのポインタ）だけを抽出したオブジェクトのリストを作り、それをキーのデータを参照して並び替えた後、page buffer内のポインターを書き直す。
+** この方法ではページ内に保存されているレコードのレイアウト情報（これをスキーマと言います）を管理する必要があります。
+レコードのレイアウト
+<code>
+| column1 | column 2 (first key: chr) | column3 (second key: int) | ... | 
+          ^                           ^
+    (この2箇所の位置を記録するオブジェクトを作る)
+</code>
+
+
+=== 参考資料
+* STLでのsortの実行: http://www.cppreference.com/wiki/stl/algorithm/sort
+* JavaのCollectionクラスの使い方 http://www.xerial.org/wiki/lecture/2008/Java/Collection
+
+
+== ディスク上のデータを読み書きする方法
+
+ハードディスクではブロック単位（512バイトの倍数）でデータを一度に読み書きするのが最も効率が良いです。1KB, 2KB, 4KB, 8KB, 16KB, ..., 256KB, などがよく使われます。大きなファイルをソートする場合は、1MBくらい大きなブロックにしても良いかもしれません。
+
+=== C++
+* 参考： http://www.cppreference.com/wiki/io/start
+seekg, seekpで読み書き位置へのポインターをセットし、read, writeを使います。
+
+=== Java
+RandomAccessFileを使います。
+* http://java.sun.com/javase/6/docs/api/java/io/RandomAccessFile.html
+<code>
+// 読み書き可能(rw)モードでファイルを開く
+RandomAccessFile r = new RandomAccessFile(new File("sample.data", "rw"); 
+try {
+  r.seek(offset);  // offsetの位置にファイルカーソルを移動
+  int v1 = r.readInt(); // int型のデータを読んでv1に代入し、カーソルを4bytes分移動
+  r.read(buffer, 0, len); // buffer(offset=0)にファイルからlen分の長さのデータを読み込む
+}
+finally {
+  r.close(); 
+}
+</code>
+
+= 実装が難しくて困った場合
+
+問題を簡単にして実装してみると良いでしょう。例えば、
+* 入力データの各列の長さやキーに使う列を固定してみる 
+** 1列目はkeyの情報で4byteのint, 2列目は10文字の文字列 というデータを並び替える。
+
+* 並び替える対象をファイルの入力ではなく、例えば以下のようなオブジェクトに限定する：
+<code>
+class Gene implements Comparable<Gene> {
+  String name;
+  int start; 
+  int end; 
+  
+  public Gene(String name, int start, int end) {
+    this.name = name;
+    this.start = start;
+    this.end = end;
+  }
+    
+  public byte[] toBytes() { 
+    // オブジェクトをレコード用のバイト配列に変換する
+  } 
+
+  public static Gene fromBytes(byte[] buf, int offset, int len) {
+    // bufferのoffsetの位置からlen だけ読んで、新しいGeneオブジェクトを作成する
+  }
+
+  public int compareTo(Gene other) { 
+    return this.start - other.start;  // startの大小で順序を決める
+  }
+}
+</code>
+
+
+
+= 発展課題 （オプション）
+
+スレッドを用いて、External Sortingを高速化する
+
+== 解説
+
+上記のExternal Merge Sortのアルゴリズムでは、ディスク"I/O"が行われている間、CPUは何もしないで遊んでいます。ディスク"I/O"はCPU内での演算に比べて時間のかかる処理なので、スレッドを用いて並列処理を行うことで、ディスク"I/O"を実行しながらpage buffer内でデータをソートでき、計算を高速化することができます。
+
+=== スレッドの使い方
+* Boost C++ ライブラリのスレッドライブラリ
+** http://boost.org/doc/html/thread.html
+** Windows, Mac, Linuxで共通して使えるC++のスレッド。これを使わない場合は、WindowsならWinThread, Linuxならpthreadを使うように2種類のコードを各必要がある。
+
+* Javaでの並列プログラミング
+** Java Tutorials: Concurrency 
+** http://java.sun.com/docs/books/tutorial/essential/concurrency/
+
+
+= プログラミングに便利な道具
+
+== Unit Test
+
+今回のプログラミングでは、page buffer, record, merge sortなど、たくさんの部品をコーディングする必要があります。部品毎に動作を確かめるには、ユニットテストのためのコードを書くと便利です。
+
+* C++: "CppUnit"
+** CppUnit導入ガイド：http://www.s34.co.jp/cpptechdoc/misc/cppunit_guide/
+
+* Java: JUnit  http://www.junit.org/
+** JUnitの使い方： http://www.xerial.org/wiki/lecture/2008/Java/JUnit
+** Eclipseに組み込まれているのですぐに使えます。
+
+
+
+
+
+

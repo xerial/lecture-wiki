@@ -1,0 +1,294 @@
+@title("2010年度 生物情報科学科 情報基礎実験 - STLの使い方" )
+
+{b|2010年度 生物情報科学科 情報基礎実験 資料} 2010年11月2日
+* この資料のURL http://www.xerial.org/wiki/lecture/2010/STL
+* 担当： 斉藤 太郎 (http://www.xerial.org/leo)
+
+= STL(Standard Template Library) の使い方
+
+C++には、Standard Template Library (STL) (参考: http://www.cplusplus.com/reference/stl/ , http://www.cppreference.com/wiki/ )という便利なライブラリが備わっており、非常に強力です。STLにあるデータ構造では、以下のものをよく使います。
+* vector 
+** 可変長配列。要素の参照がO(1)。配列の途中への要素の挿入はO(n)
+* deque  (double-ended queue)
+** queueの先頭、後方への挿入・削除や、参照がO(1)でできるqueue。
+* list  (linked list) 
+** 要素間をポインターでつないで連結するデータ構造。リストの途中への要素の挿入・削除がポインターの付け替えだけでできるのでO(1)になる。ただし、i番目の要素へのアクセスは、先頭からポインターを辿るためO(n)
+* set (sorted set)  
+** 要素の重複を許さない集合をソートして管理するデータ構造。O(log N)で挿入、削除、検索
+* multiset  
+** 重複を許したset。
+* map  
+** key "->" value の索引を作る。要素は、keyの順でソートされる。内部の実装では、赤黒木(Red-Black Tree)が使われていることが多い。挿入、削除、検索はO(log N).  自分で作ってもよいが、ツリーの回転のパターンが多くて大変なので、手始めに、挿入の性能が若干落ちるが、実装の簡単なLeft-leaning Red-Blac Trees http://www.cs.princeton.edu/~rs/talks/LLRB/LLRB.pdf を作ってみるのもよい。
+* multimap
+** keyの重複を許したmap
+
+= std::vector - 可変長配列
+
+<code>
+#include <vector>
+#include <algorithm>	// sortなどのアルゴリズムが含まれる
+#include <iostream>
+
+...
+// int型の可変長配列を作成
+std::vector<int> v;
+
+// 要素の追加
+v.push_back(3);
+v.push_back(1);
+v.push_back(5);
+
+// 要素の数の確認
+const size_t size = v.size();
+
+std::cout << "operator[]" << std::endl;
+// 各要素を参照する. operator[] はO(1)
+for(size_t i=0; i<size; ++i) {
+  std::cout << v[i] << std::endl;
+}
+
+std::cout << "pointer" << std::endl;
+// 部分配列 v[1]...v[N-1] を参照する 
+const int* end = &v[0] + v.size();
+for(const int* it = &v[1]; it != end; ++it) {
+  std::cout << *it << std::endl;
+}
+
+
+std::cout << "const_iterator" << std::endl;
+// iteratorを使う場合 (要素に変更を加えない例)
+for(std::vector<int>::const_iterator it = v.begin(); it != v.end(); ++it) {
+  std::cout << *it << std::endl;
+}
+
+std::cout << "iterator" << std::endl;
+// 配列の中身を書き換えたい場合 (各要素を2倍する例)
+for(std::vector<int>::iterator it = v.begin(); it != v.end(); ++it) {
+  *it *= 2;
+}
+for(std::vector<int>::const_iterator it = v.begin(); it != v.end(); ++it) {
+  std::cout << *it << std::endl;
+}
+
+std::cout << "sort" << std::endl;
+// 要素を並べ替える
+std::sort(v.begin(), v.end()); 
+for(std::vector<int>::const_iterator it = v.begin(); it != v.end(); ++it) {
+  std::cout << *it << std::endl;
+}
+
+</code>
+
+=== 実行例
+<code>
+operator[]
+3
+1
+5
+pointer
+1
+5
+const_iterator
+3
+1
+5
+iterator
+6
+2
+10
+sort
+2
+6
+10
+</code>
+
+== 並び替えの順序を定義する
+
+<code>
+// 昇順に並び替える
+bool descending_order(int i, int j) { return i > j; }
+
+...
+
+// v = [1, 5, 3, 10]
+std::sort(v.begin(), v.end(), descending_order); // [10, 5, 3, 1]
+
+</code>
+
+
+== 配列よりvectorを使う
+
+大きな配列を確保するとき、配列をそのまま使うと以下のようなコードになりますが、危険です。
+<code>
+{
+  int* v = new int[10000];
+ 
+  // .. ここで例外が起こってスコープを抜けるとvが解放されずメモリリークになる
+
+
+  delete[] v;
+}
+</code>
+最後のdelete文を忘れてしまうだけでもメモリリークを起こしてしまいますが、newとdeleteが対になるように十分気を付けていても、delete[]を呼び出す前に例外が発生してスコープを抜けてしまった場合にメモリリークが起こります。このようなミスを防ぐため、実は、C++では、配列を使ったコードをすべてvectorに置き換えることができます。vectorを使えば、メモリ管理を自動化してくれる上、固定長配列のようにメモリを一括して確保することもできます。vectorを使うことによるオーバーヘッドは、リリース版のコンパイルではほとんどありません。むしろ、デバッグ版のコンパイルでは、配列の範囲外にアクセスするエラーなどを検知してくれるので、配列を使うよりはるかに安全なプログラミングができます。
+
+<code>
+{ 
+  // あらかじめ10000の要素をもつ配列を確保。中身はintのデフォルト値0で初期化される
+  std::vector<int> v(10000); 
+
+
+} // 例外が起こったとしても、scopeを抜けたあとで自動的にメモリが解放される
+</code>
+
+== vector中の部分配列の参照
+
+vectorの中身はメモリ中で連続した領域にあることが保障されているので、vector中の部分配列へのポインタを取り出すには、"&v[0]", "&v[n]"などとするだけで済みます。ゲノム配列のinduced sortingではメモリ量の節約のため、suffix arrayの部分配列を再利用して再帰呼び出しを行っていますが、vectorでも同様の実装が可能です。配列の最後の要素の次を表すポインタは、"&v[0]" + v.size()で取得できます。
+
+== 余談： "vector<bool>"を使わない理由
+STLの"vector<bool>"は、今回紹介したBitVectorと同様にメモリを節約した実装になっていますが、c++では、１バイトの中の特定のビットへのreferenceを返すことができないので、iteratorが8bitおきに進んでしまいます。STLの他のコンテナと同様のつもりで使うと痛い目にあうので、BitVectorのように独自で実装した方がよいでしょう。
+
+
+= std::map - keyの順にソートされた(key, value)のペア
+
+== operator[] でmapの要素を作成、参照
+<code>
+#include <map>
+using namespace std;
+
+..
+
+map<char, int> table;
+  
+// mapに(key, value)の値を追加
+table['A'] = 0;
+table['C'] = 1;
+table['G'] = 2;
+table['T'] = 3;
+
+// mapの中身を参照
+for(map<char, int>::const_iterator it = table.begin(); it != table.end(); ++it) {
+   char key = it->first;
+   int value = it->second;
+
+   cout << "key: " << key << ", value: " << value << endl;
+}
+
+cout << "The table contains " << table.size() << " elements." << endl;
+
+// 存在しないkeyでアクセスした場合、value型のデフォルト値（intの場合は0)が代入される
+cout << "table['N'] = " << table['N'] << endl;
+
+</code>
+=== 実行例
+
+<code>
+key: A, value: 0
+key: C, value: 1
+key: G, value: 2
+key: T, value: 3
+The table contains 4 elements.
+table['N'] = 0
+</code>
+
+== 要素の検索
+
+<code>
+// (id, name)
+map<int, string> table; 
+
+table[2] = "leopard";
+table[4] = "lion";
+table[1] = "tiger";
+table[3] = "snow leopard";
+
+
+// search
+map<int, string>::const_iterator it = table.find(3);
+if(it == table.end()) {
+   cout << "key 3 is not found" << endl;
+}
+else {
+  cout << "key 3 is found. value = " << it->second << endl;
+}
+
+// range search (2以上, 4未満の最初の要素を検索）
+cout << "range search [2, 4)" << endl;
+map<int, string>::const_iterator lb = table.lower_bound(2);
+map<int, string>::const_iterator ub = table.upper_bound(3); // ここを4にすると、key=4が含まれてしまう
+for( ; lb != ub ; ++lb) {
+  cout << lb->second << endl;
+}
+
+</code>
+
+=== 実行例
+<code>
+key 3 is found. value = snow leopard
+range search [2, 4)
+leopard
+snow leopard
+</code>
+
+
+= STLのコンテナにオブジェクトを格納する
+
+int, charなどのプリミティブ型以外のデータをSTLのコンテナに格納することもできます。以下では、アラインメント位置を表すデータ構造をAlignmentクラスとして作成し、map(重複を許す場合にはmultimap)に格納していきます。
+
+map中にAlignmentクラスをそのまま格納すると、mapの内部でコピーが予期しないタイミングで生成されてしまいます。コピーを避けるためには参照(reference型)を使いたいところですが、STLのコンテナに参照を入れることは基本的にできません（C++では参照のコピーはできないため）。Alignment*のポインタを格納すると最速のコードになりますが、new で作成したAlignment*のインスタンスを後で「必ず」deleteするようにしないとメモリリークが起こります。
+
+このような状況ではshared pointer (shared_ptr) が役立ちます。shared_ptrは、使い方は基本的にポインタと一緒ですが、STLのコンテナ内でポインターが何個のオブジェクトに参照されているかを数えており(reference count)、ポインタを参照しているデータがなくなった時点でインスタンスのdeleteを行います。
+
+
+<code>
+#include <memory> // 最近のVisual Studioにはここにshared_ptr が含まれている
+#include <map>
+
+class Alignment {
+public:
+   const int s1, e1, s2, e2;
+   
+   Alignment(int s1, int e1, int s2, int e2) 
+     : s1(s1), e1(e1), s2(s2), e2(e2)
+   {}
+
+   virtual ~Alignment() {
+     // きちんとデストラクタが呼ばれることの確認
+     cerr << "deleted: " << *this << endl;
+   }
+
+   std::string toString() const {
+     std::ostringstream os;
+     os << "[(" << s1 << ", " << e1 << ")-(" << s2 << ", " << e2 << ")]";
+     return os.str();
+   }
+
+   // cout << などでAlignmentの内容を出力できるようにする
+   friend std::ostream& operator<<(std::ostream& os, const Alignment& v) {
+     os << v.toString();
+     return os;
+   }
+};
+
+
+int main() {
+  // 型名が長いので短い名前のailiasを作る
+  typedef std::multimap<int, shared_ptr<Alignment>> AlignmentTable;
+
+  AlignmentTable sortedAlignment;
+  sortedAlignment[1] = shared_ptr<Alignment>(new Alignment(1, 1, 5, 5));
+  sortedAlignment[2] = shared_ptr<Alignment>(new Alignment(3, 3, 9, 9));
+  sortedAlignment[3] = shared_ptr<Alignment>(new Alignment(10, 10, 20, 20));
+
+  for(AlignmentTable::const_iterator it = sortedAlignment.find(2); it != sortedAlignment.end(); ++it) {
+        // it->second には shared_ptr<Alignment>（alignmentのオブジェクトへのポインタ）が
+        // 含まれているので、*(it->second)として、実体への参照を取り出す
+    const Alignment& aln = *(it->second);
+    cout << aln << endl;
+  }
+
+} // ここで sortedAlignment内の、Alignmentが適切にdelete される
+</code>
+
+=== 実行例
+[runtest-aln.png]
+

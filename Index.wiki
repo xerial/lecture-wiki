@@ -1,0 +1,27 @@
+@title("Wiki Index")
+
+= Menu
+
+== Lecture
+
+=== 2011年度
+* [lecture/2011/Index 2011年度 生物情報科学科 情報基礎実験 資料]
+** C++プログラムのデバッグ、STLの使い方、ソースコードの版管理システム Mercurialの使い方
+
+=== 2010年度
+* [lecture/2010/Index 2010年度 生物情報科学科 情報基礎実験 資料]
+** C++プログラムのデバッグ、STLの使い方、ソースコードの版管理システム Mercurialの使い方
+
+=== 2009年度 
+* 2009年度 生物情報科学科 情報基礎実験 
+** [lecture/2009/Setup プログラム開発環境の構築] (C, C++, Java)
+** [lecture/2009/Report レポート提出用システムについて]
+
+** [lecture/2009/Report4 課題4: External Sorting]
+
+=== 2008年度
+* [lecture/2008/Java/Index 2008年度 生物情報科学実験I Java基礎]
+* [lecture/2008/utgb/Index 2008年度 Web Application Development with UTGB Toolkit]
+
+
+

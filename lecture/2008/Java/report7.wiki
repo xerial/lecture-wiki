@@ -1,0 +1,140 @@
+
+@title("レポート課題7")
+= レポート課題7  正規表現で検索するGUIアプリケーション
+
+正規表現を入力して、ボタンをクリックすると、正規表現にマッチする箇所を色づけするGUIアプリケーションを作成せよ。
+
+[image/regexhighliter.png]
+
+レポートは、RegexHighliterを実行できる形式で（つまりmainメソッドをもつクラスを指定して）JARファイルを作成すること。ソースコードもJARに含めること。
+
+== ヒント
+RegexHighliter.javaは、ボタンを押したときの動作の実装(actionPerfomedメソッド）が不完全である。これを修正して、正規表現でマッチした箇所を色づけ(highlite)する。
+<code>
+setButton.addActionListener(new ActionListener(){
+   public void actionPerformed(ActionEvent e) {
+　　　// ボタンを押したときの処理
+   }
+}
+</code>
+
+===RegexHighliter.java
+<code>
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
+
+
+
+public class RegexHighliter {
+
+
+  /**
+   * 検索対象のテキストフィールド
+   */
+  private JTextPane textPane = new JTextPane();
+  /**
+   * 正規表現を入力するフィールド
+   */
+    private JTextField regexField = new JTextField(20);  
+  
+    /**
+     * Create the GUI and show it.  For thread safety,
+     * this method should be invoked from the
+     * event-dispatching thread.
+     */
+    public void buildAndShowGUI() {
+      
+        // テキスト入力ボックスをスクロール可能なパネルに入れる
+        textPane.setText("Hello Swing Application! 2008 Aug 07");
+        JScrollPane scroll = new JScrollPane(textPane);
+        scroll.setBorder(BorderFactory.createTitledBorder("Text"));
+                
+        // 正規表現入力ボックスのラベル、ボタン
+        JLabel label = new JLabel("Regular Expression:");
+        regexField.setText("[A-Za-z]*");
+        JButton setButton = new JButton("set");
+        
+        // ボタンを押したときの動作を設定
+        setButton.addActionListener(new ActionListener(){
+	      public void actionPerformed(ActionEvent e) {
+        
+		//　正規表現の準備
+		String regexp = regexField.getText();
+		String text = textPane.getText();
+
+		// テキストを色づけするHighliter
+		Highlighter highliter = textPane.getHighlighter();
+　		// highliteを消去
+		highliter.removeAllHighlights(); 
+
+		正規表現がマッチした位置(start, end)すべてについてループを回す {
+                  try {
+　　　　　　　　　　　// テキストの色づけ
+             	      highliter.addHighlight(start, end, new DefaultHighlighter.DefaultHighlightPainter(Color.CYAN));
+		  } catch (BadLocationException e1) {
+		      e1.printStackTrace();
+		  }    
+　　　　　　　　}
+	  }});
+        // 正規表現を入力するパネル
+        JPanel regexPanel = new JPanel();
+        regexPanel.setBorder(BorderFactory.createTitledBorder("Input a reguler expression"));
+        regexPanel.add(label);
+        regexPanel.add(regexField);
+        regexPanel.add(setButton);
+        
+        // regexPanelと、scrollパネルを縦にレイアウト
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.add(regexPanel);
+        mainPanel.add(scroll);
+
+        //　ウィンドウを作る
+        JFrame frame = new JFrame("Regex Highlighter");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().add(mainPanel);
+        frame.pack();
+        // ウィンドウを表示
+        frame.setLocation(100, 100);
+        frame.setVisible(true);
+        
+        // ボタンを押す
+        setButton.doClick();
+    }
+
+    public static void main(String[] args) 
+　　　　　　throws ClassNotFoundException, InstantiationException, 
+　　　　　　　　　IllegalAccessException, UnsupportedLookAndFeelException {
+      
+      // OS標準の外観にする
+      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+      
+        // スレッドを作りGUI画面を表示させる
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+              RegexHighliter regexHighliter = new RegexHighliter();
+                regexHighliter.buildAndShowGUI();
+            }
+        });
+    }
+
+}
+</code>

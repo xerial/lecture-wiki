@@ -1,0 +1,81 @@
+@title("変数・式")
+= 変数 (variable) と式 (expression)
+
+
+== 式
+
+プログラムは式(expression)で構成されています。
+
+たとえば、メソッドの中身で、以下のような式を書くことができます。
+
+*Expression.java
+<code>
+class Expression
+{
+    public static void main(String[] args)
+    {
+	int x = 1 + 2;
+	System.out.println(x);
+    }
+}
+</code>
+* 実行結果
+<code>
+> javac Expression.java
+> java Expression
+3
+</code>
+
+
+==変数
+変数(variable)はデータを格納するメモリのことです。変数に代入された値は、[Scope スコープ] をでるまで保存されます。
+
+<code>
+int intValue = 10;
+System.out.println(intValue);  // 10と表示される
+
+double doubleValue = 10.0;
+System.out.println(doubleValue);  // 10.0と表示される
+</code>
+
+変数の中身は代入して書き換えることができます。
+<code>
+int intValue = 10;
+System.out.println(intValue);  // 10と表示される
+intValue = 20;
+System.out.println(intValue);  // 20と表示される
+</code>
+
+== 式の書式
+
+式の終りには、セミコロン(;)を記述します。式と式の区切りはセミコロンで判別されるので、例えば以下のように、読みやすさのために途中に改行を入れても構いません。
+
+<code>
+int x 
+     = 1 + 2;
+</code>
+
+これは、変数xに、1+2の計算結果を代入するという意味ですが、下のように短く書くのが普通です。
+
+<code>
+int x = 1 + 2;
+</code>
+
+==変数の宣言
+
+<code>
+int x;
+</code>
+という記述では、整数型でxという名前の変数を用意します。この状態では、xの中身になにが入っているかは不定（初期化されていないという）で、何も代入しないまま変数を使うとJavaではコンパイルエラーになります。
+
+<code>
+int x;
+System.out.println(x);　// コンパイルエラー。変数xは初期化されていない
+</code>
+
+<code>
+int x;
+x = 10;
+System.out.println(x);　// OK. 10と表示される
+</code>
+

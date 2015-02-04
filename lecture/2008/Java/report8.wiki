@@ -1,0 +1,43 @@
+@title("レポート課題8")
+= レポート課題8 タブ区切りデータの読み込み、GUI表示
+
+タブ文字で区切られているデータを、Web上のページから読み込み、JTableを用いて表示するGUIアプリケーションを作成せよ。GUIにはURL入力欄を用意し、URLを変更するとテーブルに表示されているデータも更新されるようにすること。
+
+* JTableの使い方 http://java.sun.com/docs/books/tutorial/uiswing/components/table.html
+
+==表示させるデータ
+以下のURL:
+<code>
+http://utgenome.org/api/refseq/human/hg18/chr1:1-500000/list
+</code> 
+は、RefSeqの遺伝子データベースのデータをtab区切り形式で表示したものである。このURLでは、humanゲノム revision hg18, 染色体1番(chr1)の配列上の位置1-500000に含まれる遺伝子のリストのデータが表示される. 
+
+<code>
+NM_001005484	chr1	+	58953	59871	58953	59871	1	58953,	59871,
+NM_001005277	chr1	+	357521	358460	357521	358460	1	357521,	358460,
+NM_001005224	chr1	+	357521	358460	357521	358460	1	357521,	358460,
+NM_001005221	chr1	+	357521	358460	357521	358460	1	357521,	358460,
+</code>
+
+このデータはの各列は、
+<code>
+name, choromosome, strand, start, end, CDS start, CDS end, num exon, exon starts, exon ends
+</code>
+というデータを意味している。exon starts, exon endsに関してはカンマ区切りのデータが１列の中に複数埋め込まれていることがあるが、気にせずそのまま１つのセル内に表示してよい。
+
+
+/*
+== 補足 (2008/09/02追加)
+
+GUIの部品の大きさが変わった時、レイアウトしなおして正しく表示させるには {b|repaint}メソッドを使うと良い。
+<code>
+JFrame frame = new JFrame();
+...
+
+frame.pack();
+frame.repaint()
+</code>
+
+
+
+*/

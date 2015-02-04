@@ -1,0 +1,94 @@
+@title(JUnit)
+= JUnitを用いたテストコードの作成
+
+JUnitを用いると、プログラムをmain以外から実行して、メソッドなど各部分の動作を確認することができる。JUnitでは、{b|テストコード}と呼ばれるJavaプログラムを作成します。
+
+== testコード用のフォルダの作成
+テストコードは、被テスト側と別のフォルダに置く方が、のちのちプログラムをパッケージ化するときに都合が良い。この演習では、srcは通常のソースコード用、testはテストコード用とする。
+
+プロジェクトの上で右クリック - Propertiesを開き、Java Build Path - Sourceタブを選択する:
+[image/buildpath.png]
+
+=== Build Pathにtestフォルダを追加
+
+Add Folderを選択し、testというフォルダを作成する。
+[image/testfolder.png]
+
+== JUnitテストの作成
+例として、[report5 レポート課題5]のGenomeSequenceクラスをテストするコードを作成する。
+
+テストしたいクラスの上で右クリック - New - JUnit Test Caseを選択
+[image/newjunittest.png]
+
+=== テスト名の入力
+必ず、{b|Junit4テストを選択}し、{b|Source folderは testに変更}する。変更したら、Nextをクリック。
+[image/newtest.png]
+
+=== テスト対象のメソッドを選択
+必要に応じて
+[image/selecttest.png]
+
+* ここで、JUnit4をbuild pathに追加しますか？と聞かれたらYesと答える。
+
+
+===GenomeSequenceTest.java
+作成されたテストコードを修正して、GenomeSequenceクラスの動作を確認するため、以下のようなテストコード書く。
+
+<code>
+import static org.junit.Assert.*;
+import org.junit.Test;
+
+public class GenomeSequenceTest {
+
+  @Test
+  public void testGenomeSequence() {
+    GenomeSequence s = new GenomeSequence("ACGT");
+  }
+
+  @Test
+  public void testGetSequence() {
+    GenomeSequence s = new GenomeSequence("ACGT");
+    assertEquals("ACGT", s.getSequence());
+  }
+
+  @Test
+  public void testComplement() {
+    GenomeSequence s = new GenomeSequence("ATGCGT");
+    assertEquals("TACGCA", s.getComplement());
+  }
+
+  @Test
+  public void testReverseStrand() {
+    GenomeSequence s = new GenomeSequence("ATGCGT");
+    assertEquals("ACGCAT", s.getReverseComplement());
+  }
+}
+</code>
+
+=== テスト
+JUnit4では、@Testとマークのついたメソッドがテストコードとして実行される。JUnit3では、testで始まる名前をもったメソッドが使われる。
+
+== assert文
+JUnitでは、テストの成否を判定するのにassertEquals, assertTrue, assertFalse, assertNotNullなどのメソッドを使う。
+
+<code>
+@Test
+public void testReverseStrand() {
+  GenomeSequence s = new GenomeSequence("ATGCGT");
+  
+  // s.getReverseComplement()の結果が "ACGCAT"ならテスト成功。第一引数が、正解の値
+  assertEquals("ACGCAT", s.getReverseComplement()); 
+}
+</code>
+
+== JUnitの実行
+テストコードの上で右クリック - Run As - JUnit Testを選択
+
+[image/runjunit.png]
+
+=== 実行結果
+赤い表示になるときは、失敗したテストがある。
+[image/junitresult.png]
+
+テスト対象のGenomeSequenceのコードを修正して、JUnitの結果がすべて緑になればOK.
+[image/success.png]

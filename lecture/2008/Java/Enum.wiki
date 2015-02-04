@@ -1,0 +1,41 @@
+@title("Enum")
+
+= enum （列挙型)
+
+ただの整数だけれども、数に名前をつけるとわかりやすいことがあります。enumは以下のように宣言します。
+<code>
+public enum Direction { NORTH, EAST, SOUTH, WEST }
+</code>
+
+enumはswitch文中でも使えます。
+
+<code>
+Direction d = Direction.EAST;
+
+switch(d)  {
+case NORTH:
+   break;
+case EAST:
+   break;
+case SOUTH:
+   break;
+case WEST:
+   break;
+}
+</code>
+
+
+enumには、ordinal(), name(), values()などのメソッドが定義されます。
+<code>
+// enumの順序
+Direction.NORTH.ordinal()   // 0
+Direction.EAST.ordinal()    // 1
+
+// enumの要素の名前
+Direction.NORTH.name()	  // "NORTH"
+
+// enumの全要素を配列として受け取る
+Direction.values()	  // {NORTH, EAST, SOUTH, WEST} 
+
+</code>
+

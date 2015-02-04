@@ -1,0 +1,15 @@
+= Tree (木）
+
+Tree（木構造は）は、
+
+
+木構造をmultipointer
+
+一般の木を２分木で表す。
+
+
+= 深さ優先探索 Depth First Travarasl (DFS)
+
+= 幅優先探索 Breadth First Travarsal (BFS)
+
+

@@ -1,0 +1,928 @@
+@title("Enum")
+
+= 2008年度 生物情報科学実験I Java基礎
+== 第３回 8月7日 データの入出力とGUIアプリケーションの作成
+
+= enum （列挙型)
+
+ただの整数だけれども、数に名前をつけるとわかりやすいことがあります。enumは以下のように宣言します。
+<code>
+public enum Direction { NORTH, EAST, SOUTH, WEST }
+</code>
+
+enumはswitch文中でも使えます。
+
+<code>
+Direction d = Direction.EAST;
+
+switch(d)  {
+case NORTH:
+   break;
+case EAST:
+   break;
+case SOUTH:
+   break;
+case WEST:
+   break;
+}
+</code>
+
+
+enumには、ordinal(), name(), values()などのメソッドが定義されます。
+<code>
+// enumの順序
+Direction.NORTH.ordinal()   // 0
+Direction.EAST.ordinal()    // 1
+
+// enumの要素の名前
+Direction.NORTH.name()	  // "NORTH"
+
+// enumの全要素を配列として受け取る
+Direction.values()	  // {NORTH, EAST, SOUTH, WEST} 
+
+</code>
+
+@title("Exception")
+= 例外
+
+* Java Tutorials: http://java.sun.com/docs/books/tutorial/essential/exceptions/index.html
+
+
+== 例外の構文 try, catch, finally
+
+Javaでは、プログラムの実行中にエラーが起こったときに、例外クラス(Throwableインターフェースを実装したもの)を投げる(throw)ことがあります。例外がthrowされると、プログラムの流れがとまり、try文中なら、その外側のcatchクローズによって例外が補足されます。
+
+
+tryブロック中を正常に終了したときも、例外処理を行った後も、finallyクローズ内のコードは必ず１度実行されます。特に必要としない場合は、finally節を省略してもよいです。
+
+<code>
+try {
+  // throws IOExceptionという宣言をもつメソッドを実行
+} 
+catch(IOException e) {
+  // IOExceptionが発生したときの処理
+  System.err.println(e.getMessage());
+}
+finally {
+  // この部分のコードはtry、あるいはcatchのブロックの後、必ず１度だけ実行される	
+}
+</code>
+
+== 例外はプログラムをわかりやすくする
+
+たとえば、ファイルを開いてデータをプログラムで読むことを考えます。ファイルを開く手順は以下のようになるでしょう。
+
+<code>
+ファイルを開く
+ファイルのサイズを調べる
+ファイルの大きさに応じたメモリを確保する
+ファイルのデータをメモリに読む
+読んだデータをメモリに書き込む
+ファイルを閉じる
+</code>
+
+この手順をプログラムにするときには、
+<code>
+ファイルが開けなかったら？
+ファイルのサイズが調べられなかったら？
+十分なメモリを確保できなかったら？
+ファイルの読み込みが失敗したら？
+ファイルを閉じられなかったら？
+</code>
+と様々なエラーが起こりえます。
+
+これらのエラー処理を挟んだ擬似コードを書くと以下のようになるでしょう。(http://java.sun.com/docs/books/tutorial/essential/exceptions/advantages.html より引用、一部翻訳）
+<code>
+initialize errorCode = 0;
+
+ファイルを開く
+if (ファイルが開いている？) {
+　　ファイルサイズを調べる
+    if (ファイルサイズはわかった？) {
+	　　メモリを確保
+        if (十分なメモリがあるか？) {
+	    ファイルのデータをメモリに読む
+            if (ファイルの読み込めたか？） {
+                errorCode = -1;
+            }
+        } else {
+            errorCode = -2;
+        }
+    } else {
+        errorCode = -3;
+    }
+    ファイルを閉じる
+    if (ファイルは閉じられたか？ && errorCode == 0) {
+        errorCode = -4;
+    } else {
+        errorCode = errorCode and -4;
+    }
+} else {
+    errorCode = -5;
+}
+return errorCode;
+</code>
+
+エラー処理のコードが、実行したいことの間にさし挟まって、一見しただけではどのような処理をしたいのかわかりません。これらのエラー処理のコードを例外として表現すると、コードは以下のように、処理の流れを邪魔せずにエラー処理のコードを書けるようになります。
+
+<code>
+try {
+　　ファイルを開く
+　　ファイルのサイズを調べる
+　　メモリを確保
+    ファイルを読んでメモリに保存
+　　ファイルを閉じる
+} catch (ファイルを開くのに失敗) {
+   doSomething;
+} catch (ファイルの大きさを調べるのに失敗) {
+    doSomething;
+} catch (メモリの確保に失敗) {
+    doSomething;
+} catch (ファイルの読み込みに失敗) {
+    doSomething;
+} catch (ファイルを閉じるのに失敗) {
+    doSomething;
+}
+</code>
+
+
+== 例外を生じうるメソッドの定義
+
+例外を投げるクラスの場合、RuntimeException以外の例外(Exceptionクラスをベースとしたもの）をメソッド内で投げる可能性がある場合は、メソッド定義は以下のように書く必要があります。
+
+IOExceptionが
+<code>
+  public void someFunction() throws IOException {
+ 　　new URL("... ").openStream(); // openStreamは、IOExceptionを投げるかもしれない
+  }
+</code>
+
+== 例外クラスの階層構造
+
+throw, catchできる例外クラスは[http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Throwable.html Throwable] interfaceを実装しています。Javaでは例外の階層は、おおまかに[http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Exception.html Exception]と、[http://java.sun.com/j2se/1.5.0/docs/api/java/lang/RuntimeException.html RuntimeException]のどちらかを拡張して実装されたものになっています。
+
+== 例外を投げる (throw)
+
+例外は、
+<code>
+throw new 例外クラス(引数 エラーメッセージなど);
+</code>
+という形で発生させることができます。
+
+== RuntimeException 
+
+プログラム中であってはいけない状態（つまりcatchで補足して回復するのが難しい場合）を表現するのにRuntimeExceptionを拡張した例外クラスをよく使います。[http://java.sun.com/j2se/1.5.0/docs/api/java/lang/RuntimeException.html RuntimeExceptionのJavaDoc]。
+
+=== 使用例
+<code>
+throw new UnsupportedOperationException("まだ実装してません");
+</code>
+
+<code>
+if(data == null)
+   throw new NullPointerException("dataがnullです");
+</code>
+
+これらの例外をメソッド中で投げるときは、明示的にthrows NullPointerExceptionなどと書かなくてもよいことになっています。
+
+== 自分の例外クラスを定義する
+
+自分のプログラム特有の例外を定義するには、Exceptionクラスを拡張するようにします。
+
+<code>
+public class MyException extends Exception {
+
+   public MyException(Throwable e) {
+      super(e);
+   }
+
+   public MyException(String errorMessage) {
+      super(errorMessage);
+   }
+
+   (他のコンストラクタ ...）
+}
+</code>
+
+
+== Exceptionのvariationはenumを使って表現する
+
+昔のJavaの教科書でよく見受けられるのが、エラーの種類ごとにExceptionを拡張したクラスを作る方法ですが、これはお勧めできません。
+<code>
+
+public class InvalidDataException extends Exception { ... }
+
+public class SomethingWrongOccurredException extends Exception { ... }
+
+...
+</code>
+といった具合です。これは実装が同じで、名前が違うだけのjavaのファイルの数をいたずらに増やすだけになるので、あまりよい手法とは言えません。Exceptionの種類を増やしたいだけなら、以下のように
+===ErrorCode.java
+<code>
+public enum ErrorCode {
+   INVALID_DATA,
+   SOMETHING_WRONG_OCCURRED, 
+   UNKNOWN_ERROR
+}
+</code>
+とエラーの種類を表現する[Enum enum型]を定義し、自分のExceptionクラスの中でErrorCodeを必ず受け取るようにコンストラクタを記述します。
+=== MyException.java
+<code>
+public class MyException extends Exception {
+
+   private ErrorCode errorCode;
+ 
+   public MyException(ErrorCode errorCode, Throwable e) {
+      super(e);
+      this.errorCode = errorCode;
+   }
+
+   public MyException(ErrorCode errorCode, String errorMessage) {
+      super(errorMessage);
+      this.errorCode = errorCode;
+   }
+
+   (他のコンストラクタ ...）
+
+   public ErrorCode getErrorCode() { return errorCode; }
+}
+</code>
+
+
+このようにExceptionを拡張すると、ErrorCode内の要素を増やすだけで、表現したいエラーの種類を簡単に増やすことができます。
+
+また、例外の補足も、
+<code>
+try {
+
+} 
+catch(InvalidDataException e) {
+   //...
+}
+catch(SomethingWrongOccurred e) { 
+   //... 
+}
+</code>
+ではなく、
+<code>
+try {
+
+} 
+catch(MyException e) {
+   switch(e.getErrorCode()) {		  
+      case INVALID_DATA:
+          //...
+          break;
+      case SOMETHING_WRONG_OCCURRED:
+          // ....
+          break;
+      default:
+          //....
+          break;
+   }
+}
+</code>
+
+とエラー処理をしたいErrorCodeに絞って、処理を記述する、ということができます。エラー処理のために必要なデータを例外クラスに持たせたい場合に初めて、MyExceptionを拡張するなどして、別に新たな例外クラスを作る、という方針をとるのが良いでしょう。
+
+@title("String")
+
+= String
+
+<code>
+String s = "ABCDEF";
+s.substring(1); // "BCDEF"
+s.substring(2, 4); // "CD"
+
+s.charAt(0);   // 'A'
+s.charAt(1);   // 'B'
+
+String s2 = "ABC";
+
+// 文字列の比較にはequalsメソッドを使う (==ではない）
+if(s.equals(s2)) {
+
+}
+else {
+
+}
+
+int pos = s.indexOf("B");   // pos = 1
+int pos2 = s.indexOf("X");   // pos = -1
+
+</code>
+
+
+==特殊文字
+
+<code>
+\r　　キャリッジリターン
+\n　　改行　　
+\t    タブ
+</code>
+
+@title("正規表現")
+
+= 正規表現
+
+Java Tutorial: http://java.sun.com/docs/books/tutorial/essential/regex/index.html
+
+正規表現を用いると複雑な文字列検索ができるようになります。以下の例は、aが0個以上続いてbで終わる文字列を検索し、見つかれば m.mathes()がtrueを返します。
+
+<code>
+Pattern p = Pattern.compile("a*b");
+Matcher m = p.matcher("aaaaab");
+boolean b = m.matches();
+</code>
+
+== 正規表現の例
+
+[image/regex-c.png]
+
+[image/regex-p.png]
+
+[image/regex-q.png]
+
+[image/regex-b.png]
+
+== 正規表現のグループ
+
+正規表現中でかっこを使うとグループが定義される。例えば、((A)(B(C)))という正規表現では、4つのグループが存在する。
+
++ ((A)(B(C)))
++ (A)
++ (B(C))
++ (C) 
+
+Matcherの、start(int group), end(int group), group(int group)でグループにマッチした文字列の情報が得られる。
+
+
+== 文字列中で、正規表現にマッチした箇所を列挙する
+<code>
+Pattern pattern = Pattern.compile("[a-z]");
+Matcher matcher = pattern.matcher("Hello World!");
+while (matcher.find()) {
+  System.out.println(String.format("[%d, %d]",  matcher.start(), matcher.end()));
+}
+
+/* 
+実行結果
+[1, 5]
+[7, 11]
+ */
+</code>
+
+@title("クラスの定義")
+
+= オブジェクト定義
+
+== クラスの初期化
+
+MyClassという名前のクラスがあるとき、
+<code>
+MyClass m1 = new MyClass();
+MyClass m2 = new MyClass();
+</code>
+と初期化できる。ここで、m1, m2はMyClassの{b|インスタンス}と呼ばれる。また、引数なしのコンストラクタのことを、{b|デフォルトコンストラクタ}と呼ぶ。
+
+=== MyClass.java
+<code>
+public class MyClass {
+
+　 // static変数 クラスのインスタンス間で共有される
+　 public static final String UNKNOWN_USER = "unknown";  
+
+   // インスタンスごとに存在する変数（インスタンス変数）
+   private String name;
+   private Date createdAt;
+  
+   // デフォルトコンストラクタ　
+   public MyClass() {
+   　　// 他のコンストラクタに初期化を任せるときはこう書く。MyClass(String name)が呼ばれる     
+       this("unknown"); 
+   }
+
+   public MyClass(String name) {
+       this.name = name;
+       setCreatedAt(new Date()); // インスタンスを作った日時をセット
+   }
+
+   // publicメソッド。 m1.getName()で呼び出せる
+   public String getName() { return name; }
+
+   // privateメソッド。 m1.setCreatedAt(...)という形では使えない。
+   // MyClassのメソッド内からのみ見えるメソッド
+   private void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+
+   // staticメソッド。インスタンス変数を全く使わないメソッドはstaticにできる。
+   // このメソッドは、MyClass.square(10)、などの形式でインスタンスがなくても使える。
+   public static int square(int x) { return x * x; } 
+}
+</code>
+
+== static変数
+
+static変数はクラスのインスタンスではなく、クラスそのものに付属する変数である。
+
+クラス内で、public staticで宣言された変数は、クラス名.変数名の形式でアクセスできる。下の３種類のアクセス方法はどれも同じUNKOWN_USERという文字列（の同一インスタンス）を参照している。
+<code>
+MyClass.UKNOWN_USER;  // "unknown"
+m1.UNKNOWN_USER
+m2.UNKNOWN_USER
+</code>
+
+== staticメソッド
+staticメソッドは、インスタンス変数を一切使わずに実装できるメソッドである場合に使われる。staticメソッドにする利点は、クラス名.staticメソッド名(...)の形式でメソッドを使える点にある。
+<code>
+public static int square(int x) { return x * x; } 
+</code>
+
+== インスタンスメソッド
+static以外のメソッドはすべてインスタンスメソッドであり、
+<code>
+public String getName() { return name; }
+</code>
+などは、インスタンス変数にアクセスしているので、staticメソッドにはできない。
+
+== public, private, protected 
+
+メソッド名にpublicをつけると、インスタンス.メソッド名の形式でつかえるメソッドになる。privateにすると、クラス内からしか使えない。protectedは継承関係にあるクラス同士で使えるメソッドである。privateメソッドはクラス内部での計算補助用に使うことが多い。
+
+private, protectedは、以下のように、実装を共有する目的で使う共通の親クラスのコンストラクタに使うこともあります。
+
+<code>
+public abstract class PlayerBase implements Player {
+    private String name;
+
+    // PlayerBase p = new PlayerBase() という形式を使えなくする。
+    private PlayerBase() { } 
+
+　　// PlayerBaseを継承したクラスからしか、このコンストラクタを呼べない
+    // つまりsuper(name)という呼び出しのみ許可する
+    protected PlayerBase(String name) {
+    　　this.name = name;
+    }
+
+    public String getName() { return name; } 
+
+    public void displayMessage(String countMessage) { 
+       System.out.println(String.format("[%s] %s", getName(), countMessage);	
+    }
+
+    // 抽象メソッド。実装は定義しない
+    public abstract void say(int i);
+
+}
+</code>
+
+
+
+= ストリーム入出力
+
+== InputStream
+
+!InputStream は、データを読み込むためのインターフェースです。InputStreamの実装として、ファイルからデータを読むためのFileInputStream, メモリ上のbyte[]配列からデータを読むためのByteArrayInputStreamなどがあります。キーボードから入力を受け付けるSystem.inもInputStreamの実装の一つです。　
+
+InputStreamは、通常byte単位(1byte = 8bit）でデータを読むのに使われます。
+
+=== ファイルをコピーする例
+source.txtというファイルを読み、dest.txtというファイルに書き込む例
+<code>
+FileInputStream in = null;
+FileOutputStream out = null;
+try
+{
+  try {
+    in = new FileInputStream("source.txt");
+    out = new FileOutputStream("dest.txt");
+    int c;
+　　// fileから1 byteずつデータを読む
+    while ((c = in.read()) != -1) {
+      out.write(c);
+    }
+  } finally {
+    // 開いたファイルは必ず閉じる　
+    if (in != null) {
+      in.close();
+    }
+    // ファイルを閉じないと、データが完全に書き込まれず
+    // 中途半端なファイルになることがある
+    if (out != null) {
+      out.close();
+    }
+  }
+}
+catch(IOException e)
+{
+  e.printStackTrace();
+}
+</code>
+
+[image/byteStream.png]
+
+== ReaderとWriter (Character Streams)
+
+* http://java.sun.com/docs/books/tutorial/essential/io/charstreams.html
+
+InputStreamは、byteというCPUで最少の単位でデータを読み出すもっともprimitiveな入力方法です。日本語の文字列など、1文字が2byte以上で表現されるデータであったり、文字コードが異なる言語を扱うのには、Readerを使うと便利です。
+
+使い方はInputStream, OutputStreamとほとんど変わりません
+<code>
+FileReader inputStream = null;
+FileWriter outputStream = null;
+
+try {
+    inputStream = new FileReader("source.txt");
+    outputStream = new FileWriter("dest.txt");
+
+    int c;
+　　// cには2 bytes分のデータが読まれる
+    while ((c = inputStream.read()) != -1) {
+        outputStream.write(c);
+    }
+} finally {
+    if (inputStream != null) {
+        inputStream.close();
+    }
+    if (outputStream != null) {
+        outputStream.close();
+    }
+}
+</code>
+== InputStreamをReaderに
+
+InputStreamReaderや、OutputStreamWriterを使うと、InputStreamやOutputSreamを、Reader, Writerとして扱うことができます。
+
+<code>
+Reader reader = new InputStreamReader(new FileInputStream("source.txt"));
+</code>
+
+== 一行ずつデータを読む
+データを一行ずつ読みたいというときにはBufferedReaderを使います。BufferedReaderのreadLineというメソッドは、改行文字("\n", "\r", "\r\n"など)の扱いを簡単にしてくれます。PrintWriterを使うと、一行ずつファイルに書き込むことが、printlnメソッドでできるようになります。
+
+=== ネットワーク上のデータ一行ずつを読み、ファイルに保存する例
+<code>
+BufferedReader reader = null;
+PrintWriter writer = null;
+try {
+   // URLに接続
+　 URL url = new URL("http://www.xerial.org/");
+　 URLConnection connection = url.openConnection();
+   // バッファ付きでネットワーク上のデータを読む
+   reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+   writer = new PrintWriter(new FileWriter("out.txt");
+
+   for(String line; (line = reader.readLine()) != null; )
+   {
+   　　writer.println(line);
+   }
+} 
+finally {
+   if(reader != null)
+      reader.close();
+   if(writer != null)
+      writer.close();
+}
+</code>
+
+== バッファ付きの入出力
+FileInputStream, FileOutputStreamなどは、readメソッドを呼び出すと、ハードディスクに直接アクセスしに行きます。通常、ハードディスクは大きな単位でデータを読み書きするのに優れ、こまごまとしたデータの読み書きの場合、ディスクのヘッドを移動するオーバーヘッドが大きいため、性能が十分に引き出せません。
+
+そこで、ディスクにアクセスする前のクッションとして、メモリ上にバッファをつくり、まとまった単位でデータを読み書きするための、BufferedReader, BufferedWriter をReaderやWriterの上にかぶせて使います。
+
+<code>
+reader = new BufferedReader(new FileReader("source.txt"));
+writer = new PrintWriter(BufferedWriter(new FileWriter("out.txt")));
+
+for(String line; (line = reader.readLine()) != null; )
+{
+　　writer.println(line);
+}
+// バッファを綺麗にする
+writer.flush();
+
+</code>
+
+バッファにたまっているデータは、バッファがいっぱいになってきたところで自動でファイルに書き出されますが、手動でファイルに即座に書き込みたい場合にはflush()を使います。PrintWriterなどのprintln()では、自動的にflush()が呼ばれます。
+
+== タブ区切りのデータの各行を、タブ位置で分割する
+
+タブ区切りデータや、CVS形式などのカンマ区切りのデータを分割するには、Stringクラスのsplitメソッドを使います。
+
+<code>
+BufferedReader reader = null;
+
+try {
+  reader = new BufferedReader(new FileReader("source.txt"));
+
+  // read lines
+  while ((line = reader.readLine()) != null)
+  {
+     // タブ位置で行を分割
+     String[] columns = line.split("\t");
+  }
+} 
+finally {
+   if(reader != null)
+      reader.close();
+}
+</code>
+
+@title("Java Swing")
+= SwingでGUIアプリケーションを作成する
+
+Javaには、Swingライブラリと呼ばれるGUI(Graphical User Interface)アプリケーションを作成するためのライブラリが含まれています。以下のプログラムを実行すると、GUIのウィンドウが開きます。
+
+[image/helloswing.png]
+
+===HelloSwing.java
+<code>
+import java.awt.Dimension;
+import java.awt.Toolkit;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
+public class HelloSwing {
+  public static void main(String[] args) {
+    // フレームを生成
+    JFrame frame = new JFrame("Hello Swing");
+    // フレームにラベルを追加
+    JLabel label = new JLabel("Hello Swing!");
+    frame.getContentPane().add(label);
+    // ウインドウが閉じられたときにアプリケーションを終了する
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    // frameの内容に合わせて、frameのサイズを調整
+    frame.pack();
+
+    // 画面中央付近に表示位置を設定
+    Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+    frame.setLocation((int) d.getWidth() / 2, (int) d.getHeight() / 2);
+    // フレームを表示させる
+    frame.setVisible(true);
+  }
+}
+</code>
+
+== ライブラリに慣れる
+
+Swingは非常に巨大なライブラリですが、GUIを作成するのに必要な部品、イベント処理(ボタンがクリックされた、テキストが変更されたときに実行するコード）などの仕組みを踏まえておけば、あとは、細かな使い方はリファレンスを見ながら開発を進めることができます。Eclipseのコード補完(Ctrl + Space)だけでも、大抵のことはわかりますが、Swingを実際に使ったサンプルコードを見るが早道でしょう。
+* http://java.sun.com/docs/books/tutorial/uiswing/index.html
+
+== Swingのコンポーネント
+* Componentギャラリー http://java.sun.com/docs/books/tutorial/ui/features/components.html
+
+* Componentの使い方 http://java.sun.com/docs/books/tutorial/uiswing/components/componentlist.html
+
+（以下の画像はJava Tutorialより抜粋)
+[image/swingcomp.png]
+
+[image/swing-frame.png]
+
+[image/swing-table.png]
+
+
+ここで紹介した以外にもコンポーネントはまだまだ沢山あります。
+
+== イベント処理
+
+ユーザーがボタンを押したり、テキストを変更したりしたときの処理は、addActionListenerなどのListenerクラスを各コンポーネントに追加してあげることで定義できます。
+
+<code>
+JButton button = new JButton("button");
+button.addActionListener(new ActionListener(){
+  public void actionPerformed(ActionEvent e) {
+     // ボタンを押したときの処理
+  } 
+});
+</code>
+
+== Componentの配置
+
+JPanel内などに、コンポーネントをどのように配置するかを指定するには、レイアウトを指定する必要があります。
+
+* Layoutガイド http://java.sun.com/docs/books/tutorial/uiswing/layout/visual.html
+
+縦１列にボタンを並べる例
+<code>
+JPanel listPane = new JPanel();
+
+// panel中の
+listPane.setLayout(new BoxLayout(listPane, BoxLayout.Y_AXIS));
+
+listPane.add(new JButton("button1"));
+listPane.add(new JButton("button2"));
+listPane.add(new JButton("button3"));
+listPane.add(new JButton("button4"));
+
+JFrame frame = new JFrame("Layout Demo");
+frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+frame.getContentPane().add(listPane);
+
+frame.pack();
+frame.setVisible(true);
+</code>
+
+
+@title("レポート課題7")
+= レポート課題7  正規表現で検索するGUIアプリケーション
+
+正規表現を入力して、ボタンをクリックすると、正規表現にマッチする箇所を色づけするGUIアプリケーションを作成せよ。
+
+[image/regexhighliter.png]
+
+レポートは、RegexHighliterを実行できる形式で（つまりmainメソッドをもつクラスを指定して）JARファイルを作成すること。ソースコードもJARに含めること。
+
+== ヒント
+RegexHighliter.javaは、ボタンを押したときの動作の実装(actionPerfomedメソッド）が不完全である。これを修正して、正規表現でマッチした箇所を色づけ(highlite)する。
+<code>
+setButton.addActionListener(new ActionListener(){
+   public void actionPerformed(ActionEvent e) {
+　　　// ボタンを押したときの処理
+   }
+}
+</code>
+
+===RegexHighliter.java
+<code>
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
+
+
+
+public class RegexHighliter {
+
+
+  /**
+   * 検索対象のテキストフィールド
+   */
+  private JTextPane textPane = new JTextPane();
+  /**
+   * 正規表現を入力するフィールド
+   */
+    private JTextField regexField = new JTextField(20);  
+  
+    /**
+     * Create the GUI and show it.  For thread safety,
+     * this method should be invoked from the
+     * event-dispatching thread.
+     */
+    public void buildAndShowGUI() {
+      
+        // テキスト入力ボックスをスクロール可能なパネルに入れる
+        textPane.setText("Hello Swing Application! 2008 Aug 07");
+        JScrollPane scroll = new JScrollPane(textPane);
+        scroll.setBorder(BorderFactory.createTitledBorder("Text"));
+                
+        // 正規表現入力ボックスのラベル、ボタン
+        JLabel label = new JLabel("Regular Expression:");
+        regexField.setText("[A-Za-z]*");
+        JButton setButton = new JButton("set");
+        
+        // ボタンを押したときの動作を設定
+        setButton.addActionListener(new ActionListener(){
+	      public void actionPerformed(ActionEvent e) {
+        
+		//　正規表現の準備
+		String regexp = regexField.getText();
+		String text = textPane.getText();
+
+		// テキストを色づけするHighliter
+		Highlighter highliter = textPane.getHighlighter();
+　		// highliteを消去
+		highliter.removeAllHighlights(); 
+
+		正規表現がマッチした位置(start, end)すべてについてループを回す {
+                  try {
+　　　　　　　　　　　// テキストの色づけ
+             	      highliter.addHighlight(start, end, new DefaultHighlighter.DefaultHighlightPainter(Color.CYAN));
+		  } catch (BadLocationException e1) {
+		      e1.printStackTrace();
+		  }    
+　　　　　　　　}
+	  }});
+        // 正規表現を入力するパネル
+        JPanel regexPanel = new JPanel();
+        regexPanel.setBorder(BorderFactory.createTitledBorder("Input a reguler expression"));
+        regexPanel.add(label);
+        regexPanel.add(regexField);
+        regexPanel.add(setButton);
+        
+        // regexPanelと、scrollパネルを縦にレイアウト
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.add(regexPanel);
+        mainPanel.add(scroll);
+
+        //　ウィンドウを作る
+        JFrame frame = new JFrame("Regex Highlighter");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().add(mainPanel);
+        frame.pack();
+        // ウィンドウを表示
+        frame.setLocation(100, 100);
+        frame.setVisible(true);
+        
+        // ボタンを押す
+        setButton.doClick();
+    }
+
+    public static void main(String[] args) 
+　　　　　　throws ClassNotFoundException, InstantiationException, 
+　　　　　　　　　IllegalAccessException, UnsupportedLookAndFeelException {
+      
+      // OS標準の外観にする
+      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+      
+        // スレッドを作りGUI画面を表示させる
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+              RegexHighliter regexHighliter = new RegexHighliter();
+                regexHighliter.buildAndShowGUI();
+            }
+        });
+    }
+
+}
+</code>
+
+
+
+
+
+
+
+
+@title("レポート課題8")
+= レポート課題8 タブ区切りデータの読み込み、GUI表示
+
+タブ文字で区切られているデータを、Web上のページから読み込み、JTableを用いて表示するGUIアプリケーションを作成せよ。GUIにはURL入力欄を用意し、URLを変更するとテーブルに表示されているデータも更新されるようにすること。
+
+* JTableの使い方 http://java.sun.com/docs/books/tutorial/uiswing/components/table.html
+
+==表示させるデータ
+以下のURL:
+<code>
+http://utgenome.org/api/refseq/human/hg18/chr1:1-500000/list
+</code> 
+は、RefSeqの遺伝子データベースのデータをtab区切り形式で表示したものである。このURLでは、humanゲノム revision hg18, 染色体1番(chr1)の配列上の位置1-500000に含まれる遺伝子のリストのデータが表示される. 
+
+<code>
+NM_001005484	chr1	+	58953	59871	58953	59871	1	58953,	59871,
+NM_001005277	chr1	+	357521	358460	357521	358460	1	357521,	358460,
+NM_001005224	chr1	+	357521	358460	357521	358460	1	357521,	358460,
+NM_001005221	chr1	+	357521	358460	357521	358460	1	357521,	358460,
+</code>
+
+このデータはの各列は、
+<code>
+name, choromosome, strand, start, end, CDS start, CDS end, num exon, exon starts, exon ends
+</code>
+というデータを意味している。exon starts, exon endsに関してはカンマ区切りのデータが１列の中に複数埋め込まれていることがあるが、気にせずそのまま１つのセル内に表示してよい。
+
+
+
+= チャレンジ課題3 データベースブラウザの作成
+
+[report8 レポート課題8]を改良し、GUIのデータベースブラウザを作成する。
+
+== 概要
+<code>
+http://utgenome.org/api/refseq/human/hg18/chr1:1-500000/list
+</code> 
+
+このURLでは、URL中のchr1の文字列をchr2に変えると2番染色体の情報が、chr1:1-500000の数字の範囲を変えると違う領域に含まれる遺伝子データを取得できる。humanのほかにも
+
+<code>
+http://utgenome.org/api/refseq/mouse/mm9/chr1:1-10000000/list
+</code> 
+で、mouseゲノム配列 (mm9)の遺伝子情報が表示される。
+
+そこで、ゲノムの種類(human/hg18, mouse/mm9), 染色体番号、配列位置をユーザーが入力するためのフィールド、あるいはリストボックスなどを、GUIインターフェースに追加し、その値を変更すると同時に、JTableに表示されるデータも更新されるようにGUIを作成せよ。ゲノム上の検索位置を移動するための、スクロールボタン、スクロールバーなどがあるとなおよい。
+
+
+@title("2008年度 生物情報科学実験I Java基礎 第３回")
+
+
+
+

@@ -1,0 +1,51 @@
+@title("正規表現")
+
+= 正規表現
+
+Java Tutorial: http://java.sun.com/docs/books/tutorial/essential/regex/index.html
+
+正規表現を用いると複雑な文字列検索ができるようになります。以下の例は、aが0個以上続いてbで終わる文字列を検索し、見つかれば m.mathes()がtrueを返します。
+
+<code>
+Pattern p = Pattern.compile("a*b");
+Matcher m = p.matcher("aaaaab");
+boolean b = m.matches();
+</code>
+
+== 正規表現の例
+
+[image/regex-c.png]
+
+[image/regex-p.png]
+
+[image/regex-q.png]
+
+[image/regex-b.png]
+
+== 正規表現のグループ
+
+正規表現中でかっこを使うとグループが定義される。例えば、((A)(B(C)))という正規表現では、4つのグループが存在する。
+
++ ((A)(B(C)))
++ (A)
++ (B(C))
++ (C) 
+
+Matcherの、start(int group), end(int group), group(int group)でグループにマッチした文字列の情報が得られる。
+
+
+== 文字列中で、正規表現にマッチした箇所を列挙する
+<code>
+Pattern pattern = Pattern.compile("[a-z]");
+Matcher matcher = pattern.matcher("Hello World!");
+while (matcher.find()) {
+  System.out.println(String.format("[%d, %d]",  matcher.start(), matcher.end()));
+}
+
+/* 
+実行結果
+[1, 5]
+[7, 11]
+ */
+</code>
+

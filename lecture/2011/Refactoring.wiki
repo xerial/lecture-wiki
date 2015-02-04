@@ -1,0 +1,577 @@
+@title("2011年度生物情報科学演習　リファクタリングとデザインパターン")
+
+= コードのリファクタリングとデザインパターン
+
+C++, Javaなどオブジェクト指向の考え方、クラスを上手に使うとコードをよみやすく整理できる場合が多くあります。 プログラムの動作を変えずにコードを整理することをリファクタリングと呼びます。 最初からコードを上手に設計するのは、熟練のプログラマでも難しいものです。少人数で開発する場合は、むしろ積極的にコードをリファクタリングし、アルゴリズムの見通しをよくするとよいでしょう。コードを修正する際にはversion管理ツールを使えるようにしておくと安心です。以前のソースコードの状態にいつでも戻せます。
+
+* ソースコードの版管理ツール　Mercurialの使い方
+** http://www.xerial.org/wiki/lecture/2010/Mercurial
+
+
+== デザインパターン
+デザインパターンに関しては、GoF本や結城浩さんの本などを読むと理解はできると思いますが、コードが綺麗に設計できるケースもあれば、無理にパターンに当てはめようとしたがために、かえってコードの維持や機能の拡張が大変になるケースも多々あります。また、新しいプログラミング言語(Scala, Ruby, Haskellなど）ほど、このようなパターンは既にライブラリ側で使われており、開発者があまり意識せずともきれいなコードになるように言語の進化が進んでいます。 デザインパターンは言語の不備を補うための知恵でもあるので、一人で小規模なコードの開発だけで済みそうな場合は、それほどデザインパターンを意識しなくてもよいかもしれません。
+
+多人数で開発する大規模なコードの場合、クラスの名前でどのパターンを使っているかわかるようにしていることがあります。 ~Factory, Abstract~, ~Builder, ~Visitorなどなど。オープンソースのプロジェクトのコードは多く公開されていますので、読んでみると勉強になります。
+
+(以下のコードはJava文法での例です。疑似コードなので、そのままではコンパイルできません)
+
+= リファクタリング
+
+== 関数の引数が多いときはクラスにまとめる
+
+(変更前)
+<code>
+// ２つの文字列のアラインメントをとる関数。
+public void align(String refSeq, String read, int matchScore, int mismatchPenalty, int gapOpenPenalty, int gapExtensionPenalty) {
+   ...  
+}
+
+// 呼び出しコード  引数が数字の羅列なので意味が分かりにくい
+align("AACGTTAGC", "CGTT", 3, 3, 5, 2);
+
+</code>
+
+（リファクタリング後）
+<code>
+// アラインメントの設定をまとめる
+class AlignmentConfig {
+   int matchScore = 1;
+   int mismatchPenalty = 3;
+   int gapOpenPenalty = 5;
+   int gapExtensionPenalty = 2;
+}
+
+// 引数
+public void align(String refSeq, String read, AlignmentConfig config) {
+   ...
+}
+
+// 呼び出しコード
+AlignmentConfig config = new AlignmentConfig();
+config.matchScore = 3;
+
+align("AACGTTAGC", "CGTT", config);
+</code>
+
+== 処理（アルゴリズム）に必要なデータをクラスにまとめる
+
+同様のパラメータに対し、種々のアラインメント関数を実装する場合:
+
+(変更前)
+<code>
+class Alignment {
+
+  public boolean exactMatch(String refSeq, String read, AlignmentConfig config) {
+     ....
+  }
+
+  public boolean approximateMatch(String refSeq, String read, AlignmentConfig config, int numDifferencesAllowed) {
+     ....
+  }
+
+}
+</code>
+
+(リファクタリング後)
+<code>
+class Alignment {
+  private String refSeq;
+  private String read; 
+  private AlignmentConfig config;
+
+  // アラインメントに必要なデータをあらかじめセットしておく
+  public Alignment(String refSeq, String read, AlignmentConfig config) {
+     this.refSeq = refSeq;
+     this.read = read;
+     this.config = config;
+  }
+
+  public boolean exactMatch() {
+     ....
+  }
+
+  public boolean approximateMatch(int numDifferencesAllowed) {
+     ....
+  }
+
+}
+</code>
+各関数の引数が少なくなり、読みやすくなっています。
+
+== クラスの継承を使って実装を切り替える
+
+種々のアラインメントアルゴリズムを実装して、性能を比較したい場合。まずはクラスの継承を使ってみます。
+
+<code>
+// 関数の実装を一部未定義のままにした抽象クラス
+abstract class Alignment {
+  private String refSeq;
+  private String read; 
+  private AlignmentConfig config;
+
+  public Alignment(String refSeq, String read, AlignmentConfig config) {
+     this.refSeq = refSeq;
+     this.read = read;
+     this.config = config;
+  }
+
+  // 抽象メソッドを用い、関数本体の実装は据え置く
+  public abstract boolean exactMatch();
+}
+
+// 文字列の比較を使ったアラインメント. Alignmentクラスを継承
+class SimpleAlignment extends Alignment {
+  public StringMatchAlignment(String refSeq, String read, AlignmentConfig config) {
+     super(refSeq, read, config); // 親クラスのコンストラクタを呼び出す
+  }
+  @Override
+  public boolean exactMatch() {
+     ... (refSeqの中にread配列が含まれているかチェック)
+  }
+}
+
+// bit-parallel alignmentの実装。 Alignmentクラスを継承
+class BitParallelAlignment extends Alignment {
+  public BitParallelAlignment(String refSeq, String read, AlignmentConfig config) {
+     super(refSeq, read, config); // 親クラスのコンストラクタを呼び出す
+  }
+  @Override
+  public boolean exactMatch() {
+     .... (省略)
+  }
+}
+
+
+// 呼び出し側コード
+String ref = "AACGTTAGC";
+String query = "CGTT";
+AlignmentConfig config = new AlignmentConfig();
+
+// 両方の実装とも、Alignmentクラスを継承しているので、Alignment型に代入できる
+Alignment aln1 = new SimpleAlignment(ref, query, config);
+Alignment aln2 = new BitParallelAlignment(ref, query, config);
+
+final int N = 100000;
+for(int i=0; i<N; ++i) 
+   aln1.exactMatch();
+// ここで、aln1の実行時間を計測するなど
+
+for(int i=0; i<N; ++i) 
+   aln2.exactMatch();
+// aln2の実行時間を計測
+
+</code>
+
+== もう少し上手に、アラインメントアルゴリズムの実装部分のみ切り出すクラス設計
+
+
+
+<code>
+// アラインメントに必要なデータセットをまとめたクラス
+class AlignmentInput {
+  // final宣言しておくことで、後から変更不可 (immutable)になる。
+  // publicで宣言しても安全 (ただし、AlignmentConfigクラス)
+  public final String refSeq;
+  public final String read; 
+  public final AlignmentConfig config;
+
+  public AlignmentInput(String refSeq, String read, AlignmentConfig config) {
+     this.refSeq = refSeq;
+     this.read = read;
+     this.config = config;
+  }
+}
+
+// 関数定義のみの宣言
+interface Alignment {
+   public boolean exactMatch(AlignmentInput input);
+}
+
+// コードがアラインメントの実装のみになり、より単純に
+class SimpleAlignment implements Alignment {
+  public boolean exactMatch(AlignmentInput input) {
+     // 配列情報にはAlignmentInput経由でアクセスする
+     return input.refSeq.contains(input.read);
+  }
+}
+// 別のアラインメントの実装
+class BitParallelAlignment implements Alignment {
+  public boolean exactMatch(AlignmentInput input) { ... }
+}
+
+
+// 呼び出し側コード
+AlignmentInput input = new AlignmentInput("AACGTTAGC", "CGTT", new AlignmentConfig());
+
+Alignment aln1 = new SimpleAlignment();
+Alignment aln2 = new BitParallelAlignment();
+
+final int N = 100000;
+for(int i=0; i<N; ++i) 
+   aln1.exactMatch(input);
+for(int i=0; i<N; ++i) 
+   aln2.exactMatch(input);
+
+</code>
+
+このようなクラス設計は、アルゴリズム(戦略)部分をクラスとして抽出し、状況に応じて実装を切り替えて使えるので、Strategyパターンと呼ばれます。 種々の実装を比較する際、それ以外の部分のコードの変更を抑えるのに役立ちます。アラインメントアルゴリズムには、SmithWatermanGotoh, Banded alignment, SIMDアラインメント、Myer's bit-parallel alignmentなど種々の実装が考えられます。
+
+== 汎用化
+
+Stringの配列同志の比較だけでなく、2bit-encodingで表現されたA, C, G, Tの文字列クラス (DNA2b class) とのアラインメントの計算に使えるようにAlignmentクラスを拡張したいとします。 同じグループとして扱いたいクラスに対しては、実装を持たない親クラス(Javaではinterface）を用いて、
+
+<code>
+// CharSequenceはJavaであらかじめ定義されている文字列用のinterface。 一部の関数定義のみ抜粋
+public interface CharSequence {
+    int length();
+    char charAt(int index);
+}
+
+
+// 2bitで表現されたDNA配列クラス。 CharSequenceで定義された関数の実装を持つ
+class DNA2b implements CharSequence {
+   private final static int B = 32; // bit length of Java Integer
+   private final int[] code;
+   private final int size;
+
+   public DNA2b(String sequence) {
+      this.code = new int[((sequence.length() * 2) + (B-1)) / B];
+      for(int i=0; i<sequence.length(); ++i) {
+         char ch = sequence.charAt(i);
+	 // ACGTクラス（char -> 2bit 変換テーブルを含む）は省略
+         this.code[(i * 2) / B] |= ACGT.encode(ch) << ((i * 2) % B) 
+      }
+      this.size = sequence.length();
+   }
+
+   public char charAt(int i) { 
+       return (char) ((this.code[(i * 2) / B] >>> ((i * 2) % B)) & 0x03);
+   }
+   public int length() { return size; } 
+}
+
+
+class AlignmentInput {
+  public final CharSequence refSeq;
+  public final CharSequence read; 
+  public final AlignmentConfig config;
+
+  // Stringの代わりに、CharSequence型を使うと、String, DNA2bの両方を受け取れる
+  public AlignmentInput(CharSequence refSeq, CharSequence read, AlignmentConfig config) {
+     this.refSeq = refSeq;
+     this.read = read;
+     this.config = config;
+  }
+}
+
+
+// 呼び出し側コード   DNA2bクラスと、String (これもCharSequences interfaceを実装している) を混ぜて使える
+AlignmentInput input = new AlignmentInput(new DNA2b("AACGTTAGC"), "CGTT", new AlignmentConfig());
+
+
+// ただし、Alignmentアルゴリズムの方では、String.contains(CharSequence) メソッドが使えなくなるので修正が必要
+</code>
+
+==Reverse complementのアラインメントも計算するように拡張
+<code>
+public interface DNASequence extends CharSequence {
+    // reverse complement を与える
+    DNASequence reverseComplement();
+}
+
+// DNASequenceを実装するように変更
+class DNA2b implements DNASequence {
+   private final static int B = 32; // bit length of Java Integer
+   private final int[] code;
+   private final int size;	// 塩基数を記録するのに必要
+
+   // 上記と同じコンストラクタ
+   public DNA2b(String sequence) {
+      this.code = new int[((sequence.length() * 2) + (B-1)) / B];
+      for(int i=0; i<sequence.length(); ++i) {
+         char ch = sequence.charAt(i);
+	 // ACGTクラス（char -> 2bit 変換テーブルを含む）は省略
+         this.code[(i * 2) / B] |= ACGT.encode(ch) << ((i * 2) % B) 
+      }
+      this.size = sequence.length();
+   }
+   
+   // 内部専用のコンストラクタを用意。
+   // privateにするのは、このクラスの内部実装についてよく知っている人のみが使うようにするため
+   private DNA2b(int[] code, int size) {
+      this.code = code;
+      this.size = size;
+   }
+
+   public char charAt(int i) { 
+       return (char) ((this.code[(i * 2) / B] >>> ((i * 2) % B)) & 0x03);
+   }
+   public int length() { return size; } 
+
+   public DNASequence reverseComplement() {  
+      int[] rc = (2bit codeのreverse complementを計算. 反転表を使うか、地道に計算する)
+      return new DNA2b(rc, size);  // DNA2bクラスはDNASequence型として扱える
+   }
+}
+
+// Stringを拡張
+class DNAString implements DNASequence {
+   private final String s;
+   public DNAString(String s) { this.s = s; }
+   public char charAt(int i) { return s.charAt(i); }
+   public int length() { return s.length(); }
+   public DNASequence reverseComplement() {
+      String rc = (sのreverse complementを計算);
+      return new DNAString(rc);
+   }
+}
+
+// CharSequence -> DNASequence に変更
+class AlignmentInput {
+  public final DNASequence refSeq;
+  public final DNASequence read; 
+  public final AlignmentConfig config;
+
+  public AlignmentInput(DNASequence refSeq, DNASequence read, AlignmentConfig config) {
+     this.refSeq = refSeq;
+     this.read = read;
+     this.config = config;
+  }
+}
+
+
+// 一部の関数の実態のみを定義した抽象クラス
+abstract class RichAlignment implements Alignment {
+   public abstract boolean exactMatch(AlignmentInput input);  // 未実装のままにしておく
+
+   // 片方のストランドでアラインメントが見つからない場合、reverse complementのアラインメントを計算
+   public boolean exactMathBothStrands(AlignmentInput input)  {
+      boolean ret = exactMatch(input);
+      return ret ? ret : exactMatch(new AlignmentInput(input.refSeq, input.read.reverseComplement(), input.config));
+   }
+}
+
+// 以下のアラインメントアルゴリズムは継承関係だけを変更するだけで、両ストランドのアラインメント機能が追加される
+class SimpleAlignment extends RichAlignment {
+  public boolean exactMatch(AlignmentInput input) { ...  }
+}
+class BitParallelAlignment extends RichAlignment {
+  public boolean exactMatch(AlignmentInput input) { ... }
+}
+
+
+// 呼び出し側コード
+AlignmentInput input = new AlignmentInput(new DNA2b("AACGTTAGC"), new DNAString("CGTT"), new AlignmentConfig());
+RichAlignment ra = new SimpleAlignment();
+ra.exactMatchBothStrands(input);
+</code>
+
+== 補足
+
+上記のコードは必ずしも最善の設計というわけではなく、これは言語仕様の限界によるもの。C++, Javaでは、継承の順番、どの部分をinterfaceにするかで悩むことが多い。 例えば、JavaのCollectionのような階層関係を活用したコード(ArrayListとSortedSetをCollection型として同等にあつかうなど)は、C++のSTLを使って書くのは難しい。
+
+image/collection.png
+
+Scalaのような最近の言語では、コードを断片化したあと、自在に組み合わせて使うための機能(trait)が備わっているため、よりアルゴリズムの設計、コードの再利用がスムーズに行える。
+
+
+== 練習問題
+
+* 上記のDNASequenceクラスを拡張し、IUPACによる表記をサポートせよ。
+<code>
+IUPACcode, Meaning
+---------------------
+A	A
+C	C
+G	G
+T	T
+M	A or C
+R	A or G
+W	A or T
+S	C or G
+Y	C or T
+K	G or T
+V	A or C or G
+H	A or C or T
+D	A or G or T
+B	C or G or T
+N	G or A or T or C
+</code>
+
+** IUPAC表記によるアラインメントをサポートするには、4-bitのフラグ（各ビットがA, C, G, Tの有無を表す）を返す関数 getACGTFlag() を用意すればよい。IUPACSequence.getACGTFlag() & DNA2b.getACGTFlag() の論理演算で、塩基のmatch, mismatchが判定できる。
+
+* DNASequenceのクラスに機能を追加し、一塩基ずつ、non-overlapping k-mer、overlapping k-merを列挙できるIteratorを3種類追加せよ。
+
+== Iterator pattern
+
+データ構造を辿るためのクラス。非常によく使われており、STLのalgorithmなども、"for(int i=0; i<N; ++i) {...}" というループの記述を避け、データ処理の本質的な部分のみにコードを集中する目的などに使われる。
+
+<code>
+List<DNASequence> l = new ArrayList<DNASequence>();
+l.add(new DNAString("ACGT"));
+l.add(new DNAString("TATAA"));
+...
+
+for(Iterator<DNASequence> it = l.iterator(); it.hasNext(); ) {
+   DNASequence each = it.next();
+}
+// Java(1.5以上）では以下の省略記法が使える
+for(DNASequence each : l) {
+   ...
+}
+</code>
+
+以下の関数を実装すればIteratorを提供できる。
+<code>
+public interface Iterator<E> {
+    /**
+     * Returns true if the iteration has more elements. (In other
+     * words, returns true if next would return an element
+     * rather than throwing an exception.)
+     *
+     */
+    boolean hasNext();
+
+    /**
+     * Returns the next element in the iteration.
+     *
+     */
+    E next();
+   
+    ...
+}
+</code>
+
+
+== Visitor pattern
+
+クラス間の複雑な強調動作が必要なパターン。型のdowncastを避けるためによく使われます。 Scala, Haskellなどの現代的な言語にはpattern matchingの機能が備わっているので、Visitor patternを使う必要がなくなってきていますが、C++, Javaなどではやむを得ず使う場合があります。
+
+<code>
+// visitorを受け入れられるクラスの共通インターフェース
+interface Shape {
+  void accept(Visitor v);
+}
+
+// visitor
+interface Visitor {
+  void visitRectangle(Rectangle rectangle);
+  void visitCircle(Circle circle);
+  void visitSquare(Square square);
+}
+
+class Rectangle implements Shape {
+  final int width;
+  final int height;
+  public Rectangle(int width, int height) { this.width = width; this.height = height; }
+  void accept(Visitor v) { v.visitRectangle(this); }  
+}
+class Circle implements Shape {
+  final int radius;
+  public Circle(int radius) { this.radius = radius; }
+  void accept(Visitor v) { v.visitCircle(this); }  
+}
+
+class Square implements Shape {
+  int width;
+  public Square(int width) { this.width = width; }
+  void accept(Visitor v) { v.visitSquare(this); }  
+}
+
+class ShapeFinder implements Visitor  {
+  void visitRectangle(Rectangle r) { 
+    System.out.println(String.format("rectangle width:%d, height:%d", r.width, r.height));
+  } 
+  void visitCircle(Circle c) {
+    System.out.println(String.format("circle radius:%d", c.radius));
+  } 
+  void visitSquare(Square s) {
+    System.out.println(String.format("square width:%d", s.width));
+  }
+}
+
+
+List<Shape> shapeList = new ArrayList<Shape>();
+shapeList.add(new Rectangle(10, 3));
+shapeList.add(new Rectangle(3, 5));
+shapeList.add(new Square(15));
+shapeList.add(new Circle(4));
+
+ShapeFinder finder = new ShapeFinder();
+for(Shape shape : shapeList) {
+   shape.accept(finder);
+}
+
+// 実行例
+rectangle width:10, height:3
+rectangle width:3, height:5
+square width:15
+circle radius:4
+</code>
+
+Visitorパターンは、たとえば、各種形状の描画機能をVisitor側にまとめて実装する場合などに使えます。データ型によって処理を分けたい場合(switch文）の代わりに使えます。
+
+=== 参考: パターンマッチ
+Scalaのパターンマッチ機能を使うとVisitor patternと同等のコードが簡単に書けるようになります。
+<code>
+// 場合分け用のクラスを定義
+sealed abstract class Shape
+case class Rectangle(width:int, height:int) extends Shape
+case class Square(width:int) extends Shape
+case class Circle(radius:int) extends Shape
+
+val shapeList : List[Shape] = List(Rectangle(10, 3), Rectangle(3, 5), Square(15), Circle(4))
+
+// pattern matching
+for(shape <- shapeList) {
+  shape match {
+    case Rectangle => ...
+    case Square => ...
+    case Circle => ...
+  }
+}
+</code>
+
+== GUIプログラミングにおけるデザインパターン
+
+GUIのアプリケーションを作成する場合、デザインパターンは宝の山です。 Observer (ボタンなどの状態の変化を検知する), Mediator (GUIのコンポーネントの状態の変化を一元管理し、各コンポーネントの描画を指示する）, Memento (Undo機能の実装などにつかえる）、MVC pattern (データベースアクセス、画面表示、ユーザーの入力管理を分離)、Decorator pattern (機能を追加する。例えば、ブラウザにスクロールバーをつけて、さらにタブも付けるなど。各々の機能は独立して実装できる)。これらのパターンが豊富に利用されています。例えば、Word、ExcelなどのOffice製品では、どうオブジェクトを組み立てているか考えてみるよいと思います。 Excelのcellには、テキスト、関数、画像など種々のデータが埋め込めるがこれはどういうパターンになっているか？ テーブルの中にテーブルを埋め込めるようなデータ構造はどう実装するか？これはCompositeパターン（共通の親クラスを設け、子クラスを同列に扱う）の例です。
+
+
+= プログラミング言語の参考図書
+
+上記の例で見せたJavaは、オブジェクトの生成に利用したメモリの解放をGarbage Collection (GC)の機能がバックグラウンドで行ってくれるため、メモリ管理の難しさが軽減されています。スレッドによる並列処理、ネットワーク、データベースへのアクセスなどのライブラリが充実しているので、高機能なプログラムを作りやすいのが特徴です。
+
+== Javaの参考書
+* Java Tutorials http://docs.oracle.com/javase/tutorial/
+* Effective Java 第2版 http://www.amazon.co.jp/dp/489471499X
+
+== 関数型言語
+また、ここ数年で、関数型言語と言われるプログラミング言語も大分使いやすくなってきました。C++, Javaなどの逐次命令処理的(imperative)なコードの書き方をなるべく避け、パターンマッチの機能を備えているのが特徴です。コードも簡潔になりやすいのが特徴です。習得には時間と経験がが必要なので、時間を見つけて書き方に慣れておくと、いざというときに役立ちます。
+
+* Programming in Scala 
+** http://www.amazon.co.jp/gp/product/4844330845/
+
+* Real World Haskell
+** http://www.amazon.co.jp/gp/product/4873114233/
+
+
+=== 参考: ScalaでのRed-black treeの実装例 (balance部分のみ)
+<code>
+abstract class Node[+A]
+case object Leaf extends Node[Nothing]
+case class R[+A](left: Node[A], key: A, right: Node[A]) extends Node[A]
+case class B[+A](left: Node[A], key: A, right: Node[A]) extends Node[A]
+
+def balance[A](left: Node[A], key: A, right: Node[A]) = {
+  (left, key, right) match {
+    case (R(a, x, b), y, R(c, z, d)) => R(B(a, x, b), y, B(c, z, d))
+    case (R(R(a, x, b), y, c), z, d) => R(B(a, x, b), y, B(c, z, d))
+    case (R(a, x, R(b, y, c)), z, d) => R(B(a, x, b), y, B(c, z, d))
+    case (a, x, R(b, y, R(c, z, d))) => R(B(a, x, b), y, B(c, z, d))
+    case (a, x, R(R(b, y, c), z, d)) => R(B(a, x, b), y, B(c, z, d))
+    case _ => B(left, key, right)
+  }
+}
+</code>
+* http://shuns.sblo.jp/article/28490553.html より引用
+

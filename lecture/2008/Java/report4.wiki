@@ -1,0 +1,75 @@
+@title("レポート課題4 税額の計算")
+= レポート課題4 税額の計算
+
+2008年現在の日本では、所得（給与から控除を差し引いた額）に応じて、所得税率が以下のように定まっている。
+
+<code>
+0円   - 195万以下   5%
+195万 - 330万以下  10%
+330万 - 695万以下  20%
+695万 - 900万以下  23%
+900万 - 1800万以下 33%
+1800万超           40%
+</code>
+
+また、東京都内では、住民税は所得の10%（都民税４%、区市町村民税６%）となっている。
+
+==問題
+キーボードから所得を万単位で入力し、所得税、住民税の額と、その合計を表示するプログラムを作成せよ。
+
+=== ヒント
+
+キーボードからの所得金額を入力するには以下のようにするとよい。
+<code>
+// System.in (キーボードの入力）を一行ずつ読むBufferedReaderを作成
+BufferedReader keyboardInput = new BufferedReader(new InputStreamReader(System.in));
+
+// ユーザーがEnterを押したとき、キーボードの入力を読み取る
+String userInput = keyboardInput.readLine(); // userInputには改行文字は含まれない
+double income = Double.parseDouble(userInput); // 文字列をdouble型の数字に変換する
+</code>
+
+
+場合分けをプログラムで記述する場合には、
+<code>
+if( 条件1 ) {
+  // 条件1が真のとき
+
+} else if ( 条件2 ) {
+  // 条件2が真のとき
+
+} else if ( 条件3 ) {
+  // 条件3が真のとき
+
+} else {
+  // 条件１、２、３のどれも満たさないとき
+}
+</code>
+
+というようにif文を連ねて書くとよい。
+
+あるいは、
+
+<code>
+int[] lowerLimitOfIncome = {0, 195, 330, 695, 900, 1800};
+double[] taxRatio        = {0.05,  0.10,  0.20,  0.23,  0.33,  0.40};
+
+</code>
+という配列を用意して、if文の繰り返しを避ける工夫もできる。
+
+<code>
+double currentTaxRatio = 0;
+
+（中略）
+
+if(lowerLimitOfIncome[i] < income && income <= lowerLimitOfIncome[i+1]) {
+   currentTaxRatio = taxRatio[i];
+}
+</code>
+
+
+
+
+
+
+

@@ -1,0 +1,127 @@
+@title("再帰 Recursion")
+= 再帰呼び出し Recursion
+
+フィボナッチ数列は以下のような数字（フィボナッチ数）の並びです。
+<code>
+0, 1, 1, 2, 3, 5, 8, 13, 21, ...
+</code>
+フィボナッチ数列は、0と1から始まり、それに続く値は直前の2つのフィボナッチの和になっています。このような数列は漸化式で書くことができます。
+
+<code>
+fibonacci(0) = 0
+fibonacci(1) = 1
+fibonacci(n) = fibonacci(n-1) + fibonacci(n-2)   // nが1より大きいとき
+</code>
+
+これをJavaのメソッドを使って実装すると以下のようになります。
+
+<code>
+public static long fibonacci(long n)
+{
+   if(n <= 1)
+       return n;
+   else
+       return fibonacci(n-1) + fibonacci(n-2);  // 再帰的な実装
+}
+</code>
+
+fibonacci(long n)という関数の中に、fibonacci関数自身が登場しています。このような実装のことを{b|再帰} (recursion)と呼びます。
+
+
+=== フィボナッチ数を求めるプログラム
+プログラム全体を示します。
+
+Fibonacci.java
+<code>
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+public class Fibonacci
+{
+   /**
+    * n番目のフィボナッチ数を求める
+    */ 
+   public static long fibonacci(long n)
+   {
+       assert(n >= 0);  // nが負の数の場合はエラーにする
+
+      if(n <= 1)
+          return n;
+      else
+          return fibonacci(n-1) + fibonacci(n-2);  // 再帰的な実装
+   }
+
+   public static void main(String[] args) throws IOException
+   {
+
+      // System.in (キーボードの入力）を一行ずつ読むBufferedReaderを作成
+      BufferedReader keyboardInput = new BufferedReader(new InputStreamReader(System.in));
+
+      // ユーザーがEnterを押したとき、キーボードの入力を読み取る
+      for(;;) {
+	  System.out.print("Input n: ");
+	  String userInput = keyboardInput.readLine();
+	  int n = Integer.parseInt(userInput); // 文字列をdouble型の数字に変換する
+	  System.out.println(String.format("fibonacci(%d) = %d", n, fibonacci(n)));
+      }
+   }
+}
+</code>
+
+実行例
+<code>
+leo@raquel~/java> javac Fibonacci.java
+leo@raquel~/java> java Fibonacci
+Input n: 0
+fibonacci(0) = 0
+Input n: 1
+fibonacci(1) = 1
+Input n: 2
+fibonacci(2) = 1
+Input n: 3
+fibonacci(3) = 2
+Input n: 4
+fibonacci(4) = 3
+Input n: 20
+// Ctrl+Cを押して終了
+</code>
+
+
+== 計算量のオーダー
+
+再帰は、未だ実装されていない関数を使って、関数を定義するという、慣れないうちは理解しにくいものです。再帰を使うときは、
+<code>
+fibonacci(n)という関数は、n番目のフィボナッチ数を返す
+</code>
+という役割を念頭に置いて、まだ実装されていない関数であっても、上のような結果が返ってくると思い込むことで、関数の中で同じ関数を使って実装することになります。
+
+再帰の概念を使うと、[reportC1 ハノイの塔:チャレンジ課題C1] のように一見難しい問題でも、nを減らして小さな問題に帰着していくことで、簡単に解けるようになります。しかしその便利さの反面、特別な工夫をしないと、計算時間が多くかかってしまうことがあります。
+
+たとえば、フィボナッチのプログラムでnの値を20より大きくしていくと、答えがかえって来るまでの時間がどんどん長くなることが実感できるでしょう。もっと大きな数だと、計算が終わらなくなってしまうことがあります。
+
+<code>
+fibonacci(20) = 6765
+Input n: 30
+fibonacci(30) = 832040
+Input n: 35
+fibonacci(35) = 9227465
+Input n: 40
+fibonacci(40) = 102334155
+Input n: 50
+// 計算が終わらないので、Ctrl+Cを押して終了
+</code>
+
+これは、一度のfibonacci関数の呼び出しで、次の2つのfibonacci関数を呼び出すために、呼び出し回数は、各再帰レベルごとに倍増していき、最終的には２のn乗回の関数呼び出しが生じるためです。２の20乗では約100万回, 2の30乗では約10億回の再帰呼び出しが必要で、このような関数は、コンピューターサイエンスの分野では、指数オーダーの計算量 O(2^n) (２の階乗) を持つと言われます。
+
+しかし、このフィボナッチ数の計算で必要なのは直前の２つの値なので、0番目, 1番目, 2番目, ... と順にフィボナッチ数を計算して、計算結果を覚えておけば、n=50の場合、0から49までの50個分のフィボナッチ数の記憶域と、48回の足し算で計算でき、計算量を低く抑えることができるようになります。この場合は、演算の回数はnの数に比例するので、オーダー O(n)の計算量と言います。フィボナッチ数の問題は、プログラムの書き方（アルゴリズム：計算の仕方）によって、速度が大きく変わる例となっています。
+
+
+
+
+
+
+
+
+
+

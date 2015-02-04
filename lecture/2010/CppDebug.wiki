@@ -1,0 +1,705 @@
+
+@title("2010年度 生物情報科学科 情報基礎実験 - C++プログラムのデバッグ")
+
+{b|2010年度 生物情報科学科 情報基礎実験 資料} 2010年11月2日
+
+= C++プログラムのデバッグ手法
+* この資料のURL http://www.xerial.org/wiki/lecture/2010/CppDebug
+* 担当： 斉藤 太郎 (http://www.xerial.org/leo)
+
+== クラスを使ったプログラミング
+
+クラスを使う理由は、おおざっぱに
+* コードを再利用したいとき 
+* データ構造を作るとき（BitVector, 木構造など）
+* アルゴリズムに必要な変数やメソッドをまとめるとき
+
+
+などです。クラス（オブジェクト）を作るクセをつけておくと、プログラムの細部を効率的に「{b|忘れる}」ことができ、プログラムの大きな流れに集中しやすくなる利点があります。また、道具となるクラスをたくさん用意しておくと、複雑な工程が絡み合ったプログラムでも、短い行数でコーディングできるようになっていきます。例えば、FASTAファイルを読み込むコードは今後のゲノム情報解析でもよく使うことになるので、クラスの形で整理し、一行で呼び出せるようにしておくとよいでしょう。
+
+他の人が開発したクラスライブラリを使うこともできます。C++の代表的なクラスライブラリには、iostream http://www.cplusplus.com/reference/iostream/ , STL http://www.cplusplus.com/reference/stl/ , Boost C++ http://boost.org/ などがあり、便利な道具がたくさん含まれています。プログラマの世界には、自分で書いたコードを自由に使える形で（例えば、オープンソースライセンスをつけて）配布する文化があるので、ネットや Google Code を探すだけで相当数のライブラリが見つかるはずです。しかし、ライブラリの使い方を身に着けたり、本当に出来の良いライブラリかを検証する学習コストそれなりにかかるので、時間のあるときに、どのようなライブラリがあるのか調べておくのがよいでしょう。
+
+
+== コードを再利用する例
+例えば、配列(vector)の内容をデバッグ用に表示させることを考えます。
+
+<code>
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main(int argc, char** argv) {
+  const int N = 10;
+  vector<int> SA(N, -1); // size Nの配列に-1を埋めて初期化
+
+  // do induced sorting ... 
+  induced_sort(SA, ... )
+
+  // display the suffix array
+  cerr << SA[0];
+  for(size_t i=1; i<4; ++i) {
+    cerr << ", " << SA[i]
+  }
+}
+</code>
+
+Suffix arrayを作る演習では、配列の内容をアルゴリズムの各ステップで確認できると便利です。 上と同じコードを繰り返して書く手間を避けるため、クラス（あるいはヘルパーメソッド）を作ります。今回は、配列の内容をカンマ区切りの文字列に変換するメソッド(StringUtil::join)を作ります。
+
+
+{b|StringUtil.hpp}
+<code>
+#pragma once
+#ifndef STRINGUTIL_20101101
+#define STRINGUTIL_20101101
+
+#include <string>
+#include <sstream>
+
+class StringUtil {
+
+protected:
+  StringUtil() {}  // hide the constructor
+public:    
+  virtual ~StringUtil() {} 
+
+  template <class Iterator>
+  static std::string join(Iterator start, Iterator end)
+  {
+    std::ostringstream r;
+    if(start == end)
+      return r.str();
+    r << *start;
+    start++;
+    while(start != end) 
+    {
+      r << ", " << *start;
+      start++;
+    }
+    return r.str();
+  }
+};
+
+#endif // STRINGUTIL_20101101
+</code>
+
+=== 使い方
+
+<code>
+#include <iostream>
+#include <vector>
+#include "StringUtil.hpp"
+using namespace std;
+
+int main(int argc, char** argv) {
+  const int N = 3;
+  vector<int> SA(N, -1);
+
+  // display SA[0] ... SA[N-1]    
+  std::cout << StringUtil::join(SA.begin(), SA.end()) << endl;
+}
+</code>
+
+{b|出力結果}
+<code>
+-1, -1, -1
+</code>
+
+== もう少し凝ったクラスの例
+
+0と1のビット列を表すBitVectorクラスを作ります。メモリの節約のため、バイト(8 bit)単位の配列上でビットのon, offを実装します。Induced sortingの論文中ではmask用配列を用意していましたが、シフト演算をつかうとmaskを高速に生成でき、メモリアクセスを介さない分高速です。
+
+
+
+=== コード例
+{b|BitVector.hpp}
+<code>
+#pragma once
+#ifndef BITVECTOR_2010_10271405
+#define BITVECTOR_2010_10271405
+
+#include <vector>
+#include <string>
+#include <sstream>
+
+class BitVector {
+  typedef unsigned char uint8;
+  std::vector<uint8> array;
+  size_t N;
+public: 
+  BitVector(size_t N) 
+    : N(N)
+  {
+    extend(N);
+  }
+
+  virtual ~BitVector() {
+
+  }
+
+  void extend(size_t N) {
+    if(N < array.size() * 8 ) {
+      return;
+    }
+
+    const size_t newSize = (N + (8-1)) / 8;
+    while(array.size() < newSize) {
+      array.push_back(0);
+    }
+
+    this->N = N;
+  }
+
+  size_t size() const {
+    return N;
+  }
+
+  bool operator[] (size_t pos) const {
+    return get(pos);
+  }
+
+  bool get(size_t pos) const {
+    return array[pos / 8] & (1 << (pos % 8)) ? true : false;
+  }
+
+  void set(size_t pos) {
+    array[pos / 8] |= 1 << (pos % 8);
+  }
+
+  void reset(size_t pos) {
+    array[pos / 8] &= ~(1 << (pos % 8));
+  }
+
+  void set(size_t pos, bool value) {
+    if(value) 
+      set(pos);
+    else
+      reset(pos);
+  }
+
+
+  std::string toString() const {
+    std::ostringstream os;
+    for(size_t i=0; i<N; ++i) {
+      os << get(i) ? "1" : "0";
+    }
+    return os.str();
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const BitVector& b) {
+     os << b.toString();
+     return os;
+  }
+
+
+};
+
+#endif // BITVECTOR_2010_10271405
+
+</code>
+
+= テストコードを作成する
+
+これまで、"StringUtil"、"BitVector"と2つのクラスを作成しました。正しくコーディングできているかを検証するには、実際に動かしてみるのが確実です。しかし、クラスを作るたびに、main関数を含むプロジェクトをたくさん用意するのも大変です。そこで、テスト駆動開発(Test-Driven Development: TDD)用フレームワークと呼ばれるツールを使います。
+
+外部ライブラリを使うので、最初の設定の仕方に慣れるまでは大変ですが、一度設定が終わってしまえばすぐにいろいろなコードを書いて動かすことができるようになるので、開発 - コードのテストのサイクルを劇的に速くまわせるようになります。
+
+== Google gtest ライブラリのインストール
+
+googletestは、Googleの中でC++開発を行いやすくするために作られたテスト実行用のツールです。他にもCppUnit http://sourceforge.net/projects/cppunit/ などもありますが、gtestライブラリは使い始めるまでのセットアップが比較的楽なので、演習ではこれを使います。
+* googletest http://code.google.com/p/googletest/
+** マニュアル http://code.google.com/p/googletest/wiki/Documentation
+
+まず、gtest-1.5.0.zip （2010年11月現在）をダウンロードして展開します。
+* Visual StudioのSolutionを右クリックし、Add - Existing Projectを選択、
+[add_project.png]
+* 先ほど展開したファイルの中の、gtest-1.5.0\msvc\gtest-md.vcprojファイルを選択します：
+[add_project-hello.png]
+** プロジェクトを変換する由のメッセージが出たら、指示にしたがいます。
+
+
+* テスト用のプロジェクトを追加します。ここでは HelloWorldプロジェクトのテスト用に、HelloWorldTestという新しいEmpty C++プロジェクトを追加しました。
+[projects-hello.png]
+
+=== 依存関係の設定
+* HelloWorldTest プロジェクトのプロパティを開いて、プロジェクトの依存関係を設定します（Project Property - Common Properties - Framework and References). ここで、メインのプロジェクト("HelloWorld")と、gtest-mdプロジェクトをreferenceとして追加します。
+[dep-hello.png]
+
+* mainプロジェクトや、gtestのヘッダファイルを参照できるように、include directoryの設定を編集 (Project Property - Configuration Properties - "C/C++" - General - Additional Include Directories)
+** include directoriesに追加するフォルダ例：
+*** ..\HelloWorld
+[include-hello.png]
+
+* Project Property - Configuration Properties - VC++ Directories - Include Directoriesにgtestのincludeフォルダを追加 (各自の展開先に応じて、パスを書き換えてください)
+** 例：C:\Users\leo\local\src\gtest-1.5.0\include
+[gtest-include.png]
+
+{b|以上の設定は、Debug, Releaseビルドのそれぞれのプロパティページで行うこと。}
+
+== (重要) プロジェクトの構成の確認
+
+ここまでの段階で、HelloWorld, HelloWorldTest, gtest-md の３つのプロジェクトができているはずです。これらをリンクして使うためには、Project Property - Configuration Properties - General - Configuration Typeが、
+* "HelloWorld" - Static library (.lib) or Dynamic library (.dll)
+* HelloWorldTest - Application (.exe)
+* gtest-md  - Static library (.lib) or Dynamic library (.dll)
+
+となっていることを確認すること。本来は、dllを作成しておく方が、プロジェクトごとに独立したライブラリができあがるので、再コンパイルの時間が短く済むようになりますが、Windows特有の宣言（__declspec(dllexport) の指定等）が必要なので、今回は割愛します。
+
+[apptype.png]
+
+== Runtime Libraryの設定
+
+各プロジェクトで共通のRuntime libraryを使う設定にしないと、プロジェクト間のリンク時にエラーが出るので、main, test, gtestなど使用するプロジェクトすべてで設定を統一すること。
+* Debug Compile  --  Multi-threaded Debug DLL (/MDd)
+* Release Compile  --  Multi-threaded DLL (/MD)
+
+
+[runtime.png]
+
+
+== テストの作成
+* テストコードをテスト用のプロジェクトに追加します (ここでは、test.cpp) StringUtilの動作をテストする例:
+{b|test.cpp}
+<code>
+#include <string>
+#include "StringUtil.hpp"
+#include "gtest/gtest.h"   
+
+using namespace std;
+
+// テストコード （テストケース名、個々のテスト名を指定）を記述するマクロ
+TEST(StringUtilTest, JoinTest) {
+  // テスト内には任意のコードが書ける
+ 
+  int data[] = { 1, 2, 3, 4, 5 };
+  // 数字をカンマで区切った文字列を作成
+  string s = StringUtil::join(data, data+5);
+  
+  // 第1引数が正解、2番目の引数が実際の値で、一致しているかテスト
+  EXPECT_STREQ("1, 2, 3, 4, 5", s.c_str());
+}
+
+int main(int argc, char* argv[]) {
+  // テストを実行するコード（おまじない。中身はあまり理解しなくても困らない）
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+</code>
+
+== テストの実行結果
+* プロジェクトをビルド(F7)して実行(F5)。コマンドラインから実行してもよい。
+[runtest-hello.png]
+
+=== 特定のテストのみを実行する
+コマンドラインで--getst_filter オプションを指定します。filter部分には*（ワイルドカード）も指定できます。このオプションを指定しない場合は、すべてのテストが実行されます。
+<code>
+--gtest_filter=StringUtilTest.JoinTest  // JoinTestのみ実行
+--gtest_filter=StringUtilTest.*         // StringUtilTest. がprefixのテストをすべて実行
+</code>
+
+== テストコードの追加
+
+今度はBitVectorの動作を確認してみましょう。十分ではないですが、各機能がとりあえず動くことを確認するために、以下のようなテストコードを書きました。
+
+{b|test.cpp}に以下のコードを追加 (別の.cppファイルでもよい)：
+<code>
+TEST(BitVectorTest, SetTest) { 
+  BitVector b(10);
+  EXPECT_EQ(10, b.size()) << "init size";
+  for(int i=0; i<10; ++i) 
+    EXPECT_EQ(false, b[i]) << "non zero at " << i;
+
+  for(int k=0; k<10; ++k) {
+    b.set(k);
+    for(int i=0; i<10; ++i) {
+      EXPECT_EQ(k == i, b[i]);
+    }
+    b.reset(k);
+  }
+
+  b.set(0);
+  b.set(2);
+  b.set(5);
+
+  EXPECT_STREQ("1010010000", b.toString().c_str());
+
+  ostringstream os;
+  os << b;
+  EXPECT_STREQ("1010010000", os.str().c_str());
+}
+
+</code>
+
+このようにしてテストコードをどんどん追加して、プログラムの動作を確認していくことができます
+。一般的には、BitVector.hpp, cppというファイルでクラスを作成したら、BitVectorTest.cppという名前でテストコードを作成するのが慣習です。
+
+[runtest2.png]
+
+
+== 使えるEXPECT, ASSERT文の種類
+* http://code.google.com/p/googletest/wiki/Primer#Assertions
+
+* サンプルコードも参考にするとよいでしょう  http://code.google.com/p/googletest/wiki/Samples
+
+
+
+
+= C++のプログラミングテクニック
+
+== BitVectorのコード解説 
+
+=== Include Guard
+
+ヘッダファイル中のクラス定義を、以下のようなマクロで囲うと、ヘッダファイルが二重にコンパイルされるのを防ぐことができます。
+
+<code>
+#pragma once
+#ifndef BITVECTOR_2010_10271405
+#define BITVECTOR_2010_10271405
+
+...
+
+#endif // BITVECTOR_2010_10271405
+</code>
+
+Visual C++やGCC(3.4以降)では、pragma once（このヘッダファイルは一度だけコンパイルする、という意味の宣言）だけでよいのですが、古いコンパイラでは期待通りの動作をする保障がありません。そこで、コードの移殖性を高めるために、ifndef, define, ... endif でクラス定義を囲みます。
+
+コード生成用のスクリプトを自作して、このマクロを手軽に定義できるようにしておくとよいです。
+
+=== typedef
+<code>
+typedef unsigned char uint8;
+</code>	
+
+の宣言では、型の名前をunsigned charと書く代わりに、uint8と短く書けるようにしています。
+	
+=== String stream
+
+<code>
+#include <sstream>
+</code>
+には、文字列を簡単に生成するためのライブラリが含まれています。ostringstreamは、coutなどと同じように使えますが、画面には何も出力されず、バッファに文字列が溜まっていきます。最後にstr() メソッドを呼び出すことで、バッファにたまったデータを文字列として出力できます。
+
+<code>
+std::string toString() const {
+  std::ostringstream os;
+  for(size_t i=0; i<N; ++i) {
+    os << get(i) ? "1" : "0";
+  }
+  return os.str();
+}
+</code>
+
+=== "operator<<"のoverload
+
+クラスを作ったときは、"operator<<" を定義しておくと、デバッグ用の表示を作成するのに便利です。
+<code>
+friend std::ostream& operator<<(std::ostream& os, const BitVector& b) {
+   os << b.toString();
+   return os;
+}
+</code>
+
+
+このような定義をしておくと、coutなどのostreamに対して、クラスの内容を出力することができます。
+<code>
+BitVector b(5);
+b.set(0);
+b.set(3);
+
+cout << b << endl; //  10010 と表示される
+</code>
+
+これは以下のように"operator<<"という関数呼び出しをネストして行っていることになります。
+<code>
+operator<<(operator<<(cout, b), endl)
+</code>
+
+friend指示子は「このメソッドは、privateを含むメンバ変数、関数などに自由にアクセスできる」という意味です。今回のように、privateメンバにアクセスしない場合は、friendをつけず、以下のようにグローバル関数として定義しても構いません。
+
+<code>
+// BitVector.hpp
+std::ostream& operator<<(std::ostream& os, const BitVector& b);
+</code>
+
+<code>
+// BitVector.cpp
+std::ostream& operator<<(std::ostream& os, const BitVector& b) {
+  os << b.toString();
+  return os;
+}
+</code>
+
+=== constの使い方
+
+const指示子はC++ではとても重要な意味を持っています。constを正しく使えるか否かでC++プログラマとしての腕も測れるくらいです。
+
+constの役割は
+* データに変更がなされないことを保障する
+
+
+に尽きます。これによって、コンパイラがコードを最適化しやすくなります。例えば、N, Kなどの定数をconstで宣言しておくと、これらの値が優先的にCPU内のレジスタに配置され、メモリアクセスの頻度を減らすことができます。
+
+constのより重要な意味は、誤ってデータを書き換えてしまうプログラムのミスを未然に防げる、という点です。
+
+以下のBitVector.toString() メソッドでは、constをつけています。
+<code>
+std::string toString() const {
+  std::ostringstream os;
+  for(size_t i=0; i<N; ++i) {
+    os << array[pos / 8] & (0x80 >> (pos % 8)) ? "1" : "0";
+  }
+  return os.str();
+}
+</code>
+これは、BitVectorの内容を何度文字列に変換しても、BitVectorの内部データには何も変更が起こらないという意味です。これを誤って、
+<code>
+std::string toString() const {
+  std::ostringstream os;
+  for(size_t i=0; i<N; ++i) {
+    os << array[pos / 8] = (0x80 >> (pos % 8)) ? "1" : "0";
+  }
+  return os.str();
+}
+</code>
+とarrayのデータを変更するコードを書いてしまったとしても、コンパイルエラーになってくれるので、コードのミスに気付くことができます。
+
+
+また、suffix arrayを作るとき、入力の文字列（ゲノム配列）やその長さが変化しないことを以下のように表します。
+<code>
+#include <vector>
+
+// inputの内容は変化しないとconstで明示
+void induced_sort(const std::vector<int>& input, ...) {
+  ...
+}
+
+
+int main(int argc, char** argv) {
+
+  (中略)
+
+  const size_t N = fasta.length();  // Nは定数
+  std::vector<int> input(N);	// N個分の配列を作る
+  
+  induced_sort(input, ...);   
+
+  // Nと、inputの中身はinduced_sort呼び出し後で変化しない
+   
+  // (inputのreverse, induced_sortを実行するコードを書く)
+
+  return 0; 
+}
+</code>
+もし、Nやinputの中身が途中で変化してしまうと、reverse部分のコードでおかしなことになってしまい、バグの発見には相当時間がかかることでしょう。このようなミスを防ぐためのconstです。
+
+
+=== 参照
+メソッドを定義するときに、以下のように書くと、foo()の呼び出し時に文字列のコピーが発生してしまいます。
+
+<code>
+#include <string>
+
+void foo(const std::string s)  { 
+  // foo呼び出し時の引数sはコピーされる
+} 
+
+int main(int argc, char** argv) { 
+  std::string s = "hello";
+  foo(s);
+}
+</code>
+
+このオーバーヘッドを避けるために、参照を使います。
+<code>
+void foo(const std::string& s)  { 
+  // foo呼び出し時の引数sはコピーされない
+} 
+</code>
+
+=== Return value optimization
+
+関数の返り値のコピーを防ぐにはどうしたらよいでしょう？ 参照を返してしまうと、文字列の実態をどこかで管理しておかなければならないので、コードが複雑になってしまいます。
+
+しかし以下のBitVector.toString() の実装では、文字列型をそのまま返しています。stringのコンストラクタは、os.str()で一回、返り値を受け取る側で変数を作るためにもう一回呼び出されそうですが、実は、返り値についてはコンパイラ側で最適化を行ってもよいことになっており、最近のコンパイラでは、関数の返り値をそのまま変数に代入するため文字列のコピーは発生しません。
+
+<code>
+std::string toString() const {
+  std::ostringstream os;
+  for(size_t i=0; i<N; ++i) {
+    os << get(i) ? "1" : "0";
+  }
+  return os.str();
+}
+</code>
+
+<code>
+BitVector bv(10);
+std::string s = bv.toString();  // return value optimization: os.str()の結果が直接sに代入される
+</code>
+
+ただし、以下のように書いてしまうと、2回stringのコンストラクタが呼ばれてしまい無駄が生じます。
+<code>
+BitVector bv(10);
+std::string s;		// ここで1回初期化
+s = bv.toString();  // ここでもう１回（コピー）コンストラクタが呼ばれる
+</code>
+
+コピーコンストラクタとは、データのコピーを作るためのコンストラクタです。自分でクラス中に定義しない場合、メンバ変数を逐次コピー(shallow copy. newで確保したオブジェクトはポインタのみコピー)するコピーコンストラクタが生成されます。
+<code>
+class A {
+  int value; 
+public:
+  // コピーコンストラクタ
+  // otherのインスタンスを元に新しいAのインスタンスを作る
+  A(const A& other) : value(other.value) {
+  }
+}
+</code>
+
+=== ヘッダファイル(.h, .hpp)では、using namespaceは使わない
+
+ヘッダファイル中で、
+<code>
+using namespace std;
+</code>
+と書いてしまうと、このファイルをincludeしたすべてのソースコードで、using namespace stdの宣言が強制されてしまいます。例えば、stdの名前空間で提供されているstd::stringの機能だけでは物足りない人が、mylibrary::stringを作って、std::stringと使い分けている場合もあります。using namespace stdとusing namespace mylibraryを同時に宣言すると、2種類のstringを区別できなくなってしまい、毎回、std::stringとmylibrary::stringとを区別して書かなくてはいけなくなってしまいますし、意図しない名前空間中のクラス、メソッドと衝突してコンパイルが上手くいかなくなってしまうトラブルの元です、
+
+ヘッダファイル中では、面倒でも、std::string, std::coutなどと記述するのがマナーです。
+
+
+=== 変数名の付け方のコツ
+
+* 型の名前以外の名前にして情報量を増やす
+<code>
+vector<char> charVector; 
+</code>
+なら、
+<code>
+vector<char> genomeSequence;
+</code>
+というような具体的な名前を与える。
+
+型の情報は、Visual StudioなどのIDEでは、カーソルを合わせるだけで表示してくれるので、あまり困ることがありません。
+
+
+* 型名で充分意味が分かる場合は、数学的なシンボルとして単純な名前をつけてもよい。
+<code>
+BitVector b;
+</code>
+
+=== Copy Constructorが呼ばれるタイミング
+
+(to be written)
+
+
+= Loggerを使って、実行時の情報を表示する
+
+プログラム動作中の変数の内容を表示したいとき、毎回ブレークポイントを設定して内容を確認するのは大変です。簡単には、printfなどを使用して、cerr (STDERR)に変数の内容をログメッセージとして表示しますが、文字列の加工はコストの大きい処理なのでプログラムの全体の性能を落としてしまいます。
+
+そこで、ログを取るときに以下のような方針を考えます。
+* ログレベル("TRACE < DEBUG < INFO < WARN < ERROR < FATAL"など）を設定して、普段はINFO以上のログを表示。より詳細な情報を表示したいときは、log levelをDEBUGやTRACEまで下げる。
+* クラスごとにloggerを作成し、loggerの表示の"on/off"をクラスごとに切り替えられるようにする
+* Debugビルドのときはログを表示、Releaseビルドの時はログメッセージを表示するコードを消す
+
+
+このような機能を提供するライブラリはいくつかあります：
+* log4cxx  http://logging.apache.org/log4cxx/
+* Google Glog http://code.google.com/p/google-glog/  (東大卒で現在Googleに務めている浜地さん作成) 
+
+慣れてきたら以下のようにLoggerを自分で作ってもよいでしょう (以下は4年以上前に僕が作成した例です）
+* http://www.xerial.org/hg/xerial-core-c++/file/tip/xerial-core/xerial/Logger.hpp
+** http://www.xerial.org/hg/xerial-core-c++/  (Mercurialのリポジトリ。Mercurialからソースコードを取得する方法などはまた後日解説します）
+
+== Google Glog ライブラリのインストール
+
+Google Glog: http://code.google.com/p/google-glog/
+
+Google Test(gtest)ライブラリをインストールした時と同様に以下の設定をします：
+* glog-0.3.1.tar.gz をダウンロードして展開します (2010年11月現在)
+* Solution - Add - Existing Project で、展開したフォルダ内の、glog-0.3.1/vsproject/libglog.vcproj を選択します。
+[add_glog.png]
+* ログ機能を使用したいプロジェクト（ここではHelloWorldとHelloWorldTestの両方）のProperty画面で、Common Properties - Framework and References から、libglogを追加します
+[add_dep_glog.png]
+*  Configuration Properties - VC++ Directories - Include Directoriesで、展開したフォルダ内のglog-0.3.1/src/windows を追加します。
+[include_glog.png]
+
+== 使用例
+
+<code>
+#include <glog/logging.h>
+#include <vector>
+#include "StringUtil.hpp"
+#include "BitVector.hpp"
+
+// induced sortingの疑似コード
+class InducedSort {
+  const std::vector& input;
+
+  const int N;
+  const int K;
+
+  std::vector<int> bucket;
+  BitVector LSType;
+
+public:
+  InducedSort(const std::vector<int>& input, int K) 
+    : input(input), N(input.size()), K(K), LSType(input.size())
+  {
+     // 常に表示
+     LOG(INFO) << "N=" << N; 
+     LOG(INFO) << "K=" << K;
+
+     // release buildでは消えるログメッセージ
+     DLOG(INFO) << "input: " << StringUtil::join(input.begin(), input.end() + N);     
+
+  }
+
+  void InducedSort<T>::SAIS(std::vector<int> SA) {
+
+    LSType.set(N-2, 0);
+    LSType.set(N-1, 1);  // the sentinel 
+
+    // set the type of each character
+    for(int i=N-3; i>=0; --i) {
+      LSType.set(i, input[i] < input[i+1] || (input[i] == input[i+1]  && LSType[i+1]));
+    }
+    DLOG(INFO) << "LS type: " << LSType;
+
+    ....
+
+  }
+
+  ...  
+};
+</code>
+
+== 実行例
+[logout.png]
+
+
+Google glogのより詳細な使い方は以下のドキュメントを参考にしてください：
+* http://google-glog.googlecode.com/svn/trunk/doc/glog.html
+
+= C++の参考書
+
+C++言語を使いこなすのは大変ですが、C++ほど高速化、メモリ管理にまでこだわったプログラミングをできる言語は他にないというのが現状です。ゲーム、CG業界などC++が必須という世界もあります。
+
+
+* C++ Coding Standards: http://www.amazon.co.jp/dp/4894716860/
+** C++でコーディングするときの基本的なルールがよくまとまっている
+
+* Exceptional C++ http://www.amazon.co.jp/dp/4894712709/
+** C++で例外安全なプログラムを書くときに必要な知識
+
+* オブジェクト指向における再利用のためのデザインパターン http://www.amazon.co.jp/dp/4797311126/
+** オブジェクト、クラスを用いたプログラミングのノウハウ(デザインパターン）が詰まっています。それぞれのパターンの利害得失が書かれているので、実際のコードに適用するときの参考に
+
+* Let's Boost http://www.kmonos.net/alang/boost/
+** Boostライブラリの使い方入門
+
+= その他のツール
+
+* Valgrind  http://valgrind.org/
+** C++のコードの解析、メモリリークの追跡、コードのパフォーマンス測定など
+
+

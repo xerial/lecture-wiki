@@ -1,0 +1,132 @@
+@title("メソッド定義")
+
+= メソッド
+
+for, ifなどを用いるだけでも、すでに複雑なプログラムが書くことができます。しかし、プログラムが大きくなると、似たようなコードを繰り返して書くケースに多く遭遇するようになります。
+
+
+そこで、繰り返しを避け、コードの再利用性を高めるため、プログラムを、関数y=f(x)の用に、{b|入力 xから出力y}を生成する部品に分けることを考えます。{b|メソッド}とは入力を受けて、結果を返す関数をプログラムで表現したものです。
+
+== メソッドの使用例
+
+次のプログラムは、整数型のデータを受け取って、その２乗の値を返すsquareというメソッドを定義しています。
+
+=== MethodExample.java
+<code>
+public class MethodExample { 
+  public static int square(int x) {
+     return x * x;
+  }
+ 
+  public static void main(String args[]) {
+     System.out.println(square(2));     
+     System.out.println(square(4));     
+     System.out.println(square(10));     
+  }
+}
+</code>
+=== 実行結果
+<code>
+4
+16
+100
+</code>
+
+メソッドの結果を返すときには、{b|return}文を使います。
+
+== メソッド定義
+
+メソッドの定義は、以下のような形式をとります。
+<code>
+public static 返り値の型 メソッド名(引数1の型 引数1の名前, 引数2の型 引数2の名前, ...) {
+  // メソッド本体
+}
+</code>
+
+返り値の型がvoid以外の場合は、メソッドの本体の中で必ずreturn文が必要です。public staticの部分は、クラス定義の外からも使えるという意味で、詳細は授業の後半（オブジェクト指向の辺り）で説明します。
+
+
+メソッド定義を使うと、同じようなコードの繰り返しを避けることができますし、また、複雑な処理のコードを簡便に使う、という目的でもメソッドを使用できます。以下の例は、squareの計算結果をわかりやすく表示する部分を、メソッドdisplaySquareを使ってまとめたものです。
+
+=== MethodExample.java　拡張版
+<code>
+public class MethodExample { 
+  public static int square(int x) {
+     return x * x;
+  }
+   
+  public static void displaySquare(int x) { 
+     System.out.print("square of " + x);
+     System.out.println(" = " + square(x));
+   }
+ 
+  public static void main(String args[]) {
+     displaySquare(2);
+     displaySquare(4);
+     displaySquare(10);
+  }
+}
+</code>
+
+=== 実行結果
+<code>
+square of 2 = 4
+square of 4 = 16
+square of 10 = 100
+</code>
+
+displaySquareのように、返り値を必要としないメソッドでは、void型を使用し、return文を書きません。
+
+== ２引数以上のメソッド
+
+引数が２つ以上ある場合のメソッド定義の例です。
+=== MinMax.java
+<code>
+public class MinMax { 
+  // xとyの小さい方を返す
+  public static int min(int x, int y) {
+     if(x <= y)
+        return x;
+     else
+        return y;
+  }
+
+  public static int max(int x, int y) {
+     if(x >= y)
+        return x;
+     else
+        return y;
+  }
+
+  public static void main(String args[]) {
+     System.out.println(min(10, 54));
+     System.out.println(max(3, 20));
+  }
+}
+</code>
+=== 実行結果
+<code>
+10
+20
+</code>
+
+慣れてくると[IfStatement 条件演算子]を使って以下のようにメソッドを簡単に書くこともできます。
+
+=== MinMax.java （簡略版）
+<code>
+public class MinMax { 
+  // xとyの小さい方を返す
+  public static int min(int x, int y) {
+     return x <= y ? x : y;
+  }
+
+  public static int max(int x, int y) {
+     return x >= y ? x : y;
+  }
+
+  public static void main(String args[]) {
+     System.out.println(min(10, 54));
+     System.out.println(max(3, 20));
+  }
+}
+</code>

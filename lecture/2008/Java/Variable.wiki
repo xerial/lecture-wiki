@@ -1,0 +1,11 @@
+@title("変数")
+= 変数
+
+変数はデータを格納する箱です。
+
+<code>
+int intValue = 10;
+double doubleValue = 10.00;
+</code>
+
+

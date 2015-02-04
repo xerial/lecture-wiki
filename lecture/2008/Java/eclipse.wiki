@@ -1,0 +1,134 @@
+@title("Eclipseの使い方")
+
+= Eclipseとは
+
+Eclipse (http://eclipse.org)は、Javaでプログラムを開発するためのIDE(統合開発環境）と呼ばれるソフトウェアです。もちろん、テキストエディタとJava Compiler(javac)のみでも十分プログラムの開発は行えますが、Eclipseを用いるとより手軽にプログラムの開発が行えるようになります。
+
+==Eclipseの主な特徴
+
+* Ctrl+SPACE でコードの補完（最初の数文字を入力すると、残りはタイプしなくても、候補が表示される）機能がある。メソッドの入力が簡便
+* また、テンプレート（雛型）機能を用いて、入力の手間を省くことができる
+* 表示しているファイルの移動が簡単
+* コードのデバッグ機能が充実
+
+* 入力しながら、コードの構文(syntax)エラーがわかるので、開発しやすい
+** C/C++用のIDEでここまでできるものは、見受けられない
+
+* JUnitによるテスト機能が統合されている。コードを書いたら即座にテストできる
+
+
+* カスタマイズ機能が充実
+** コードの色づけ、キーコマンドの設定、Emacsキーバインドが使える
+
+==Eclipseを起動する
+
+貸し出されたノードPCのデスクトップ上(Win + Dで表示できる）に、eclipseのアイコンがあるはずです。Eclipseを起動したら、workbenchを選択します。
+
+[image/eclipse-workbench.png]
+
+== Eclipseで新しいプロジェクトを作成する
+File - New - Java Projectの順に選択します。
+[image/new-project.png]
+
+プロジェクト名を入力します（たとえば、Java2008など）
+[image/project-name.png]
+
+Finishボタンを押して完了です。
+
+== クラスを作成する
+
+プロジェクトの上で右クリック - New - Classを選択
+[image/newclass.png]
+
+クラス名を入力する。HelloWorld.javaを作りたいなら、HelloWorldと入力して、Finishを押す。
+[image/create-helloworld.png]
+
+==プログラムを入力する
+
+[image/projectview.png]
+
+プログラムを打ち込む
+[image/helloworld.png]
+
+Ctrl + S (Ctrlキーを押しながらSを押す）とファイルが保存される。
+
+== ファイルの保存場所を確認する
+
+project viewのHelloWorld.javaの上で右クリック - Propertiesを選択。あるいは、テキストを編集中にAlt+Enterを押す。
+[image/property.png]
+
+ファイルがディスク上のどの位置にあるのか表示される。
+[image/filelocation.png]
+
+== プログラムを実行する
+
+HelloWorld.javaの上を右クリック（テキストエディタ内でも可）して、 Run As - Java Applicationを選択。
+[image/runas.png]
+
+コンソール画面に実行結果が表示される。
+[image/console.png]
+
+
+== コードの誤りを修正する
+
+コードが間違っている位置に赤線が引かれ、エラーがあるとわかる。下の例は行末のセミコロンを忘れている。
+[image/edit.png]
+エラーの内容は、Problemsタブに表示される。
+
+=== よくあるミス
+プログラム中の記号、セミコロンなどには全角文字は使えません。修正してCtrl+Sで保存後でもエラーが消えない場合、Javaの構文が全角文字で書かれていないか確認するとよいでしょう。
+
+== プログラムをデバッグする
+
+Eclipseでは、Javaプログラムの実行を途中で一時停止させ、変数の内容などを確認することができます。プログラムを途中で止める位置を{b|ブレークポイント}と呼びます。
+
+
+=== ブレークポイントを設定する
+ソースコードの左側のバーの部分で、ダブルクリックするとブレークポイントを置くことができます。ブレークポイントを消すには、同じ個所をもう一度ダブルクリックします。
+[image/breakpoint.png]
+
+
+=== デバッグモードでプログラムを実行する
+
+ブレークポイントでプログラムの動作を一時停止させたい場合、プログラムをデバッグモードで実行する必要があります。やり方はプログラムを実行するときとほぼ同じですが、Run Asではなく、Debug As - Java Applicationを選択します。
+
+[image/debugas.png]
+
+== デバッグ画面
+
+実行後、Debug Perspective（デバッグ用の画面）に移りますか？と聞かれた場合はYesを選択します。ブレークポイントの位置でプログラムの実行が停止します。
+
+[image/debug-perspective.png]
+
+=== ステップ実行
+Step-in, Step-Over, Step-Returnなどのボタンを押すと、プログラムの実行を少しずつ進めることができます。
+[image/step.png]
+
+Resumeボタンを押すと、次にブレークポイントにぶつかるまでプログラムを実行しつづけます。停止ボタンで、プログラムの実行を終了します。
+
+=== 変数の値の確認
+
+Variablesのタブで、変数の内容を確認することができます。値に変化のあった変数は、色つきで表示されます。
+[image/variable.png]
+
+
+== Perspective（画面モード）の切り替え
+
+Eclipseには、ソースコード編集用のJava Perspective, デバッグ用のDebug Perspectiveなどがあります。これらは画面右上のPerspectiveスイッチで切り替えることができます。
+
+[image/perspective.png]
+
+== 一度起動したプログラムの再実行
+
+一度、上の手順で実行したプログラムは、画面上のボタンから手軽に再実行することができます。
+[image/start.png]
+
+
+== 便利なショートカットキー(一部）
+
+<code>
+Ctrl+F8   Perspectiveの切り替え
+Ctrl+F7   Windowの切り替え
+Ctrl+S    ファイルの保存
+Ctrl+M    ウィンドウの最大化切り替え。テキストを大きく表示したいときなど
+</code>

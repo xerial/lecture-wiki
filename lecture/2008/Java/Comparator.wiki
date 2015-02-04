@@ -1,0 +1,25 @@
+@title(比較演算)
+
+= 比較演算
+
+数が一致しているかどうかや、大小を比較するには以下の演算子を使います。
+
+<code>
+記号 　式の例   意味
+----------------------------------------
+==     a == b   equal
+!=     a != b   not equal
+<      a < b    less than
+>      a > b    more than 
+<=     a <= b   less than or equal to 
+>=     a >= b   more than or equal to 
+</code>
+
+=== 注意
+<code>
+a = b 
+</code>
+と書くと、比較演算ではなく、aにbの値を代入する演算になってしまいます。
+比較のときは、== と、=を２つつなげて書きます。
+
+

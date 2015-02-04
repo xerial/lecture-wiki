@@ -1,0 +1,76 @@
+@title("配列")
+
+= 配列
+
+同じ型をもつ複数のデータを扱いたいときには配列を使います。以下の例では、int型データ5個分の配列を確保しています。
+<code>
+int[] a = new int[5]; // 配列の確保
+
+for(int i=0; i<a.length; i++)
+{
+   a[i] = i * i;
+}
+</code>
+
+このコードを実行すると、
+<code>
+a[0] = 0;
+a[1] = 1;
+a[2] = 4;
+a[3] = 9;
+a[4] = 16;
+</code>
+
+という5つの整数値が配列aに格納されることになります。配列のサイズを調べるには、
+<code>
+配列の変数名.length
+</code>
+を使います。
+
+== 配列の初期値
+
+あらかじめ、配列に代入する値がわかっている場合は、以下のように初期値を設定して配列を確保することもできます。
+
+<code>
+int[] lowerLimitOfIncome = {0, 195, 330, 695, 900, 1800};
+/*
+lowerLimitOfIncome.length = 6;　// 配列の要素数を得る
+lowerLimitOfIncome[0] = 0;
+lowerLimitOfIncome[1] = 195;
+lowerLimitOfIncome[2] = 330;
+lowerLimitOfIncome[3] = 695;
+lowerLimitOfIncome[4] = 900;
+lowerLimitOfIncome[5] = 1800;
+ */ 
+</code>
+
+文字列の配列もは以下のように初期化できます。
+<code>
+String[] weekdays = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+</code>
+
+= Object型の配列
+
+[Type primitive型]の場合、
+<code>
+int intArray[] = new int[5];
+// intArray = [0, 0, 0, 0, 0]
+</code>
+と配列は初期化してすぐに使えますが、
+
+Stringのようなオブジェクト型の場合には、
+<code>
+String[] strList = new String[5];
+// strList = [null, null, null, null, null]
+</code>
+と、配列を確保しただけでは中身はnullとなるので、配列の各要素ごとの初期化が必要です。
+
+<code>
+String[] strList = new String[5];
+// strList = [null, null, null, null, null]
+
+for(String s : strList) 
+   s = new String("A"); // または,　s = "A";
+
+// strList = ["A", "A", "A", "A", "A"]
+</code>

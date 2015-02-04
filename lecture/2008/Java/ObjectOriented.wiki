@@ -1,0 +1,494 @@
+@title(オブジェクト指向プログラミング)
+
+= オブジェクト指向プログラミング Object Oriented Programming 
+
+== CPUレベルで見たプログラム
+
+加減乗除などの演算、基本データ型(int, double, byte)、配列、制御構造(for, whileループ）の使い方を身につけたところで、ありとあらゆるプログラムが書ける基礎がすべて身についたことになります。実際、CPU (Central Processing Unit) には、このような簡単な命令セットしか用意されていません。複雑なプログラムでも、最終的には、簡単な命令の羅列に落ち着きます。
+
+CPUが実行する命令には、レジスタ（CPU内の記憶域）の操作、加減乗除演算、ビット演算、条件分岐(if)などの命令セットがあります（{b|マシン語}, Machine Codeと呼ばれます）。プログラムをCPUが直接実行できるマシン語に変換する操作が、コンパイルであり、Javaでは、Java Virtual Machineが実行できる{b|バイトコード}に変換することをコンパイルと呼びます。
+
+== CPUはKY? 
+
+CPUの命令そのものは単純でも、マシン語、バイトコードのような記述は人間にとって理解するのは難しくなるため、low level languageと呼ばれます。low level languageを人間にとってわかりやすい形で抽象化したJavaなどのプログラミング言語を{b|高級言語}と呼びます。これは、必ずしも言語の能力が低い、高いという意味ではなく、あくまで、人間にとってわかりやすい表現に近づいている（抽象化レベルが高い）という意味です。
+
+
+自然言語でプログラムを書くと、たとえば、以下のようになります。
+<code>
+3の倍数ならFizzと表示
+</code>
+
+これを、擬似プログラム(psuedo codeと呼びます。文法は適当です）で書くと、こうなります。
+<code>
+for i=1 から 10 do
+  i が 3の倍数なら、Fizzと表示
+end
+</code>
+
+Javaできっちり書くなら、
+<code>
+for(int i=1; i<=10; i++) {
+   System.out.println((i % 3 == 0) ? "Fizz" : i );
+}
+</code>
+となるでしょう。
+
+
+自然言語の形でプログラムを記述できるに越したことはありません、自然言語特融の曖昧さのために問題が生じることがあります。たとえば、最初の例では、3の倍数以外の数が出てきたときに、どうすればよいのかがわかりません。数字をそのまま表示させたいのか、３の倍数のときだけFizzと表示させたいのか、この文だけからは判別できません。また、とりあえず1から10までを数えるプログラムを書きましたが、本当は1から100を数えるプログラムが必要だったかもしれません。
+
+現代のCPUはまだまだ空気を読むことができないので、人間の方がCPUのために自然言語のあいまいさを減らして、その場の空気を説明してあげる必要があります。今の時代、空気を読むというのは、さも簡単なことのように言われ、読めないとバカにされてしまいますが、プログラムを書く上で、空気を読むというのは、実はとても重要なことです。
+
+使い勝手のよいプログラム、システムというのは、空気を読めるプログラムのことだと考えてもいいかも知れません。
+
+== 繰り返しを避ける DRY (Do Not Repeat Yourself)の原則
+
+プログラマの中では、繰り返しを避ける DRY (Do Not Repeat Yourself)の原則というのがあります。同じことをするコードを、繰り返して書かないという意味です。似たようなコードを書くときに、コードを安易にコピー＆ペーストしてしまうと、コード中にバグを発見したとき、コピーされたコードをすべて見つけて治すまで、バグが完全に取れないという罠に陥ります。
+
+
+そしてなにより、似たようなコードの繰り返しというは、あまり書きたいものではありません。例えば、FizzBuzzゲームをしている子供が10人いたとして、そのような子供たちの振りをするプログラムを書くとき、以下のようなコードを書くでしょうか？ 
+
+<code>
+// 子供Ａ
+for(int i=1; i<=10; i++) {
+   System.out.println((i % 3 == 0) ? "Fizz" : i );
+}
+
+// 子供B
+for(int i=1; i<=10; i++) {
+   System.out.println((i % 3 == 0) ? "Fizz" : i );
+}
+
+...
+</code>
+
+この例は、あまりにもばかげているので、さっさとメソッドを使って簡単にしてしまいましょう。
+
+FizzBuzzPlayer.java	
+<code>
+// FizzBuzzゲームをする人
+public class FizzBuzzPlayer {
+
+  public void say(int i)
+  {
+     // 3の倍数のときだけFizzと言う
+     System.out.println((i % 3 == 0) ? "Fizz" : i );
+  }
+
+  public static void main(String[] args) {
+     // FizzBuzzで遊ぶ子供を作る
+     FizzBuzzPlayer childA = new FizzBuzzPlayer();
+     FizzBuzzPlayer childB = new FizzBuzzPlayer();
+     ..
+ 
+　　 // 1から10まで...   
+     for(int i=1; i<=10; i++)
+     {
+        childA.say(i);  
+        childB.say(i);
+        ...
+     }
+  }
+}
+</code>
+
+
+あれ、思ったより簡単になりませんね？ System.out.printlnの部分は１つにまとまりましたが、プレーヤーchildA, childB, ...を用意するところで同じようなコードの繰り返しがあります。もう少し頑張ってみましょう。
+
+<code>
+// FizzBuzzゲームをする人
+public class FizzBuzzPlayer {
+
+  public void say(int i)
+  {
+     // 3の倍数のときだけFizzと言う
+     System.out.println((i % 3 == 0) ? "Fizz" : i );
+  }
+
+  public static void main(String[] args) {
+     int numChildren = 10;
+     // FizzBuzzゲームをする子供(numChildren = 10)人分の配列を確保
+     FizzBuzzPlayer[] childList = new FizzBuzzPlayer[numChildren];
+
+　　 // 配列の各要素を初期化して、個々のFizzBuzzPlayerを作る
+     for(int i=0; i<numChildren; i++)
+　　　　childList[i] = new FizzBuzzPlayer();
+
+     // １から１０までの数を。。。
+     for(int i=1; i<=10; i++)
+     {
+　　　  // childList中のそれぞれのプレーヤーに数を言ってもらう
+	for(FizzBuzzPlayer player : childList)
+           player.say(i);
+     }
+  }
+}
+</code>
+
+余計ごちゃごちゃしてしまいましたが、これで何人プレーヤーが増えても、お茶の子さいさいです。numChildrenの値を変えてあげるだけで、コードをこれ以上増やさずにプレーヤーを増やせます。この状態で DRY (Don't Repeat Yourself 繰り返すな）という原則を守ることができました。
+
+=== オブジェクトの配列の初期化
+
+ここで注意を１つ。
+<code>
+// FizzBuzzゲームをする子供(numChildren = 10)人分の配列を確保
+FizzBuzzPlayer[] childList = new FizzBuzzPlayer[numChildren];
+</code>
+と配列を初期化しても、FizzBuzzPlayer用の椅子を10席分確保しただけであって、イスに座っているFizzBuzzPlayerはまだ世の中に生まれていません。ですから、
+<code>
+// 配列の各要素を初期化して、個々のFizzBuzzPlayerを作る
+for(int i=0; i<numChildren; i++)
+   childList[i] = new FizzBuzzPlayer();
+</code>
+と、配列の各要素（イス）に対して、FizzBuzzPlayerを新しく作ってあげる必要があります。
+
+Java5 (JDK1.5以上）では、もっとシンプルに、
+<code>
+FizzBuzzPlayer[] childList = new FizzBuzzPlayer[numChildren];
+
+// childListのそれぞれの要素をplayerという変数に代入して、ループ内を実行
+for(FizzBuzzPlayer player : childList)
+   player = new FizzBuzzPlayer();
+</code>
+と書くことができます。
+
+
+基本型の配列の場合は、
+<code>
+boolean booleanArray[] = new boolean[5];
+// booleanArray = [false, false, false, false, false]
+
+int intArray[] = new int[5];
+// intArray = [0, 0, 0, 0, 0]
+</code>
+と、各要素には各データタイプの初期値が設定されます。ただし、効率のため初期値をあえて設定せず、不定（めちゃくちゃな値が入る）にしておくプログラム言語も多いので、配列の各要素は明示的に初期化する習慣をつけておくとよいでしょう。
+
+
+オブジェクトの場合には、
+<code>
+FizzBuzzPlayer[] childList = new FizzBuzzPlayer[5];
+// childList = [null, null, null, null, null]
+</code>
+と、null (ナル。空っぽを表す値。日本人には昔の教科書の影響でヌルという人が多い）が初期値になるので、各要素ごとの初期化が必要です。
+
+== オブジェクトにパラメータを持たせる
+
+ここで、FizzBuzzPlayerのmainを実行すると残念なことになります。
+
+<code>
+1
+1
+1
+...
+2
+2
+2
+...
+Fizz
+Fizz
+Fizz
+...
+</code>
+
+これでは、だれがどの数字を発言したのかまったくわかりませんね。そこで、FizzBuzzPlayerに名前をつけてみることにしましょう。
+
+<code>
+public class FizzBuzzPlayer {
+
+  private String name; // playerの名前
+
+　public FizzBuzzPlayer(String name)
+  {
+     this.name = name;
+  }
+
+  public void say(int i)
+  {
+     // 3の倍数のときだけFizzと言う
+     System.out.println(String.format("[player %s] %s", name, (i % 3 == 0) ? "Fizz" : i ));
+  }
+}
+</code>
+
+<code>
+public static void main(String[] args) {
+   int numChildren = 10;
+   FizzBuzzPlayer[] childList = new FizzBuzzPlayer[numChildren];
+
+　 // 各playerに名前を付ける
+   for(int i=0; i<numChildren; i++)
+  　　childList[i] = new FizzBuzzPlayer(Integer.toString(i+1));
+   for(int i=1; i<=10; i++)
+   {
+      for(FizzBuzzPlayer player : childList)
+      　player.say(i);
+   }
+}
+</code>
+
+main実行すると、
+
+<code>
+[player 1] 1
+[player 2] 1
+[player 3] 1
+...
+[player 1] 2
+[player 2] 2
+[player 3] 2
+...
+[player 1] Fizz
+[player 2] Fizz
+[player 3] Fizz
+...
+</code>
+と表示されるはずです。
+
+
+== ちょっだけオブジェクトに他と違う動作をさせたい
+
+ゲームをする人の中に、3の倍数ではなく、どうしても3のつく数字で○○になりたい人がいたらどうしましょう？ そんな人のための新しいComedianPlayerという、クラスを作るかもしれないですね。
+
+<code>
+public class ComedianPlayer {
+
+  private String name; // playerの名前
+
+　public ComedianPlayer(String name)
+  {
+     this.name = name;
+  }
+
+  public void say(int i)
+  {
+     // 3がつく数字のときだけ○○と言う
+     System.out.println(String.format("[世界の%s] %s", name, (iには３が付く) ? "○○" : i ));
+  }
+}
+</code>
+
+
+すると、mainの中ではちょっと面倒なことになってしましいます。急に増えたひょうきん者のせいで、コードがなんだかばらばらした感じになってしまいました。
+<code>
+public static void main(String[] args) {
+   int numChildren = 10;
+   FizzBuzzPlayer[] childList = new FizzBuzzPlayer[numChildren];
+   CommedianPlayer commedian = new CommedianPlayer("ナベアツ"); // CommedianPlayerを追加
+
+　 // 各playerに名前を付ける
+   for(int i=0; i<numChildren; i++)
+  　　childList[i] = new FizzBuzzPlayer(Integer.toString(i+1));
+
+   for(int i=1; i<=10; i++)
+   {
+      for(FizzBuzzPlayer player : childList)
+      　player.say(i);
+
+      commedian.say(i); // CommedianPlayerだけ別扱い
+   }
+}
+</code>
+
+こんどは、ちゃんと3と5の倍数のときにFizz, Buzzの両方言を正しく言うGeneiusPlayerを追加したくなったら、またmainの中身に、GeniusPlayer.say(i)メソッドを書き加えてあげなくてはなりません!!! 
+
+
+= オブジェクトの共通項を抜き出そう
+
+ここで、ComedianPlayerであってもGeniusPlayerであっても、FizzBuzzPlayerと同じで、要するに名前が付けられて、sayというメソッドが使える、という共通項があります。これを抜き出してあげましょう。
+
+===Player.java
+<code>
+public interface Player {
+    // iのときに何か言う
+    public void say(int i); 
+
+    // 自分の名前を返す
+    public String getName(); 
+}
+
+</code>
+
+これは{b|インターフェース}と言って共通項となるメソッドの定義だけを書いたものです。このインターフェースを用いると、共通メソッドを持ったクラスを仲間にすることができます。
+
+
+===FizzPlayer.java
+3の倍数だけFizzという
+<code>
+public class FizzPlayer implements Player {
+
+  private String name; // playerの名前
+
+　public FizzPlayer(String name)
+  {
+     this.name = name;
+  }
+
+  public String getName() { return name;  }
+   
+  public void say(int i)
+  {
+     // 3の倍数のときだけFizzと言う
+     System.out.println(String.format("[player %s] %s", name, (i % 3 == 0) ? "Fizz" : i ));
+  }
+}
+</code>
+
+
+=== ComedianPlayer.java
+3が付く数字のときだけ○○という世界のなんとかさん。
+<code>
+public class ComedianPlayer implements Player {
+
+  private String name; // playerの名前
+
+　public ComedianPlayer(String name)
+  {
+     this.name = name;
+  }
+
+  public String getName() { return name;  }
+
+  public void say(int i)
+  {
+     // 3がつく数字のときだけ○○と言う
+     System.out.println(String.format("[世界の%s] %s", name, (iには３が付く) ? "○○！" : i ));
+  }
+}
+</code>
+
+== Interfaceは仲間を作る
+これで、FizzPlayerとComedianPlayerはPlayerという共通項を持った仲間として扱えます。main部分も以下のように書き換えることができます。簡単のため人数は3人に減らしました。
+
+<code>
+public static void main(String[] args) {
+   int numPlayer = 3;
+   Player[] playerList = new Player[numPlayer];
+
+   for(int i=0; i<numPlayer-1; i++)
+  　　playerList[i] = new FizzPlayer(Integer.toString(i+1));　// FizzPlayerはPlayerの仲間
+   playerList[numPlayer-1] = new CommedianPlayer("ナベアツ"); // CommedianPlayerもPlayerの仲間
+
+   for(int i=1; i<=10; i++)
+   {
+      for(Player player : playerList)
+      　player.say(i); 　　　　　
+   }
+}
+</code>
+
+
+=== 実行例
+<code>
+[player 1] 1
+[player 2] 1
+[世界のナベアツ] 1
+[player 1] 2
+[player 2] 2
+[世界のナベアツ] 2
+[player 1] Fizz
+[player 2] Fizz
+[世界のナベアツ] ○○！
+...
+</code>
+
+=== データ構造を使って簡潔に
+配列型のデータはどうしても、配列の大きさであったり、制約が大きいためプログラムが理解しにくくなりがちです。playerをあとで３人以上に増やしたい、というときも、不便です。
+
+そこで、リストのデータ構造であるArrayListを使って、書き換えてみます。
+
+<code>
+public static void main(String[] args) {
+
+　 // Playerを格納できるリスト構造を作る  
+   ArrayList<Player> playerList = new ArrayList<Player>();
+
+   playerList.add(new FizzPlayer("Alen"));
+   playerList.add(new FizzPlayer("Lucy"));
+   playerList.add(new CommedianPlayer("ナベアツ"));
+
+   for(int i=1; i<=10; i++)
+   {
+      for(Player player : playerList)
+      　player.say(i); 　　　　　
+   }
+}
+</code>
+
+どうです？ コードがかなりわかりやすくなったと感じませんか？
+
+== 共通の実装をまとめるための抽象クラス
+
+上の、FizzPlayerとComedianPlayerでは、似たようなコードがたくさん含まれています。nameに関連する部分がそうです。今度は、実装の共通部分をまとめてみましょう。
+
+
+=== PlayerBase.java
+class名にabstractが付くと、抽象(abstract)クラスとなります。共通して実装できるメソッドなどはここで作ってしまい、それ以外の部分は後でこのPlayerBaseを拡張する実装側のクラスに任せることができます。
+<code>
+public abstract class PlayerBase implements Player {
+    private String name;
+    public PlayerBase(String name) {
+    　　this.name = name;
+    }
+
+    public String getName() { return name; } 
+
+    public void displayMessage(String countMessage) { 
+       System.out.println(String.format("[%s] %s", getName(), countMessage);	
+    }
+
+    // 抽象メソッド。実装は定義しない
+    public abstract void say(int i);
+
+}
+</code>
+
+
+=== FizzPlayer.java
+クラスPlayerBaseを拡張(extend)すると、FizzPlayerの中で、PlayerBaseのメソッドを使えるようになります。このとき、PlayerBaseをスーパークラス、あるいは親クラスと呼びます。Playerインターフェースは、親のPlayerBaseでimplements指定されているので、ここでは必要ありません。
+
+<code>
+public class FizzPlayer extends PlayerBase { 
+
+　public FizzPlayer(String name)
+  {
+     super(name);　// PlayerBase(String name)を呼び出す
+  }
+   
+  public void say(int i)
+  {
+     // 3の倍数のときだけFizzと言う
+     displayMessage((i % 3 == 0) ? "Fizz" : i );
+  }
+}
+</code>
+
+=== ComedianPlayer.java
+名前を設定するときに、ちょっとだけトリックを入れます。
+<code>
+public class ComedianPlayer extends PlayerBase { 
+
+　public FizzPlayer(String name)
+  {
+     super("世界の" + name);　// PlayerBase(String name)を呼び出す
+  }
+   
+  public void say(int i)
+  {
+     // 3がつく数字のときだけ○○と言う
+     displayMessage((iには３が付く) ? "○○！" : "");
+  }
+}
+</code>
+
+mainメソッドに関しては何も変更が要りません。FizzPlayer, ComedianPlayerの両方で、getName()メソッドが使えます。ただ、sayメソッドを実行したときに、各々の実装で実行されるというだけです。
+
+== オブジェクト指向プログラミング
+
+オブジェクトを使うと、interfaceを使って仲間にしたり、他のクラスをextendsして実装を共有化することで、プログラムを簡略に書くことができます。PlayerBaseをextendして、FizzPlayerやComedianPlayerを作った方法をクラスの{b|継承}と呼びます。
+
+FizzPlayerもComedianPlayerもPlayer型のためのARrayListに格納されていますが、Player.sayを呼び出したときに、本来のクラスのsayが実行される、という仕組みを、{b|ポリモーフィズム (多相)}と言います。
+
+こういったオブジェクトや、オブジェクトの継承、多相を駆使してプログラミングすることを、オブジェクト指向プログラミングと呼んでいて、現代のプログラミングでは欠かせない考え方となっています。
+
+
+
+

@@ -1,0 +1,48 @@
+= 制御構造
+
+== if 条件分岐
+
+<code>
+if (条件式) {条件式がtrueのときに実行} else {条件式がfalseのときに実行}
+</code>
+
+<code>
+if(i == 10) {
+　System.out.println("i is equal to 10");
+}
+else {
+　System.out.println("i is not equal to 10");
+}
+</code>
+
+== for ループ
+
+<code>
+for(int i=0; i<10; i++)
+{
+  System.out.print(i + " ");
+}
+</code>
+
+*実行結果
+<code>
+0 1 2 3 4 5 6 7 8 9 
+<code>
+
+== while文
+
+int i = 0;
+while(
+
+
+== do while
+
+
+
+
+== continue, break
+
+== iterator
+
+
+

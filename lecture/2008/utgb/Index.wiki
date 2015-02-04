@@ -1,0 +1,58 @@
+@title("Web Application Development with UTGB Toolkit")
+
+={b|Web Application Development with UTGB Toolkit}
+{b|October 9th, 2008}
+
+== Introduction to UTGB Toolkit
+* UTGB Toolkit: http://utgenome.org/
+=== Features
+* Ready-to-use platform for developing web applications
+* Embedded [http://sqlite.org SQLite] database engine
+* Portable web server 
+* Server-side programming support
+** database - object mapping
+** web action 
+* Genome browser interface
+
+
+== Mini Project 
+=== Goal
+* Create your own genome browser
+=== Sub Goals
+* Learn how to develop web applications
+** how to write code for custom tracks
+
+=== Resume
+* User Interface
+* Creating Databases
+** Formatting text data for SQL database
+
+* web server programming
+* database connection
+* web interface
+** HTML
+** Google Web Toolkit 
+
+
+== Discussion Forum
+* UTGB Discussion Forum 
+** English: http://groups.google.com/group/utgb-users?hl=en
+** Japanese: http://groups.google.com/group/utgb-users-jp
+
+
+{b|October 22nd, 2008}
+== Web Application Programming with UTGB 
+* Java Programming 
+** Reference: http://www.xerial.org/wiki/lecture/2008/Java/Index
+== Programming with Java
+* Installation of Eclipse
+
+== Database Programming
+* SQL
+* JDBC Connection
+
+== UTGB Shell
+* UTGB Shell http://utgenome.org/utgb-shell
+
+
+

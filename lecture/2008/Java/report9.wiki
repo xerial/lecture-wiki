@@ -1,0 +1,328 @@
+@title("レポート課題9") 
+
+= レポート課題9 データベースでピボット演算 (集計)
+
+1からNまでの数(int)を、Collectionに追加するとき、addの効率、contains（特定の要素が含まれているかどうかを調べる）、Collections.sort の性能を調べたい。調べた結果はExcel、あるいはOpenOffice Calkなどを用いてグラフにし、結果について考察せよ。
+
+=== 提出方法
+* ソースコードが含まれたJARファイルを１つ
+* グラフ・考察を含む文章ファイル(Word, PDF (!OpenOffice Writerで作成）などの形式）を１つ
+
+== 実験対象のCollection
+* add, containsの性能を
+** !LinkedList, !ArrayList, !TreeSet, !HashSetそれぞれについて調べる
+** containsは、ランダムに選んだ10個の数（1からNまでの範囲）a1, a2, ..., a10 を決めておき、それぞれのデータ構造について、contains(a1), contains(a2), ...の10個の検索に要する実行時間を計測する。
+
+* !LinkedList, !ArrayListについては、Collections.sortの性能も調べる
+
+== Nを動かす: scalabilityの調査　
+
+* サイズNは、100から、10倍ずつ、10万程度まで増やしていくとする。
+* 実験結果の信頼性を良くするために、同じ実験は5回繰り返して速度（計算時間）の平均をとる。平均をとる操作はJavaで書くのではなく、データベースに計算させるため、５回の試行(trial)の計算時間を各々データベースに記録することになる。
+
+
+== データベースで集計
+* SQLite JDBCを用いて、以下形式のテーブルを持つデータベースを作成する。
+<code>
+create table experiment (
+  operation text,
+  size integer,
+  structure text,
+  trial integer,
+  time real
+)
+</code>
+
+* 実験結果はこのexperimentテーブルに追加していく
+* group by演算を用いて、operation, structure, sizeの３つ組でグループ化し、計算速度の平均を求める
+** これはMicrosoft Excelでピボットテーブルを用いて集計するのと一緒なので、そちらを使って計算結果などを確認すると実感がわくと思います。
+
+=== テーブルのサンプル
+*注意: ここに書かれている計測時間は適当に埋めたもので、実測値ではありません。
+* 以下は、同じ実験を3回繰り返したときの例
+
+<html>
+<table border="1" rules="rows" cellPadding="5">
+<tr bgcolor="#3399CC" style="color:white;">
+  <th>operation</th>
+  <th>size</th>
+  <th>structure</th>
+  <th>trial</th>
+  <th>time</th>
+</tr>
+<tr>
+  <td>add</td>
+  <td>1000</td>
+  <td>LinkedList</td>
+  <td>1</td>
+  <td>0.10</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>1000</td>
+  <td>LinkedList</td>
+  <td>2</td>
+  <td>0.12</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>1000</td>
+  <td>LinkedList</td>
+  <td>3</td>
+  <td>0.04</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>1000</td>
+  <td>ArrayList</td>
+  <td>1</td>
+  <td>0.03</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>1000</td>
+  <td>ArrayList</td>
+  <td>2</td>
+  <td>0.01</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>1000</td>
+  <td>ArrayList</td>
+  <td>3</td>
+  <td>0.08</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>10000</td>
+  <td>LinkedList</td>
+  <td>1</td>
+  <td>1.0</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>10000</td>
+  <td>LinkedList</td>
+  <td>2</td>
+  <td>1.2</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>10000</td>
+  <td>LinkedList</td>
+  <td>3</td>
+  <td>1.4</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>10000</td>
+  <td>ArrayList</td>
+  <td>1</td>
+  <td>0.3</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>10000</td>
+  <td>ArrayList</td>
+  <td>2</td>
+  <td>0.1</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>10000</td>
+  <td>ArrayList</td>
+  <td>3</td>
+  <td>0.8</td>
+</tr>
+<tr>
+  <td>contains</td>
+  <td>1000</td>
+  <td>LinkedList</td>
+  <td>1</td>
+  <td>0.2</td>
+</tr>
+<tr>
+  <td>contains</td>
+  <td>1000</td>
+  <td>LinkedList</td>
+  <td>2</td>
+  <td>0.2</td>
+</tr>
+<tr>
+  <td colspan=5>...</td>
+</tr>
+</table>
+</html>
+
+
+* 集計例 (注：計算結果は出たらめです）
+<html>
+<table border="1" rules="rows" cellPadding="5">
+<tr bgcolor="#3399CC" style="color:white;">
+  <th>operation</th>
+  <th>size</th>
+  <th>structure</th>
+  <th>avg(time)</th>
+</tr>
+<tr>
+  <td>add</td>
+  <td>1000</td>
+  <td>LinkedList</td>
+  <td>0.10</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>10000</td>
+  <td>LinkedList</td>
+  <td>1.2</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>1000</td>
+  <td>HashSet</td>
+  <td>1.2</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>10000</td>
+  <td>HashSet</td>
+  <td>3.0</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>1000</td>
+  <td>TreeSet</td>
+  <td>1.2</td>
+</tr>
+<tr>
+  <td>add</td>
+  <td>10000</td>
+  <td>TreeSet</td>
+  <td>3.0</td>
+</tr>
+<tr>
+  <td colspan=5>...</td>
+</tr>
+<tr>
+  <td>contains</td>
+  <td>1000</td>
+  <td>LinkedList</td>
+  <td>0.2</td>
+</tr>
+<tr>
+  <td>contains</td>
+  <td>10000</td>
+  <td>LinkdList</td>
+  <td>0.2</td>
+</tr>
+<tr>
+  <td>contains</td>
+  <td>1000</td>
+  <td>ArrayList</td>
+  <td>0.2</td>
+</tr>
+<tr>
+  <td>contains</td>
+  <td>10000</td>
+  <td>ArrayList</td>
+  <td>0.2</td>
+</tr>
+<tr>
+  <td colspan=5>...</td>
+</tr>
+<tr>
+  <td>sort</td>
+  <td>1000</td>
+  <td>LinkedList</td>
+  <td>0.2</td>
+</tr>
+<tr>
+  <td>sort</td>
+  <td>1000</td>
+  <td>ArrayList</td>
+  <td>0.2</td>
+</tr>
+<tr>
+  <td colspan=5>...</td>
+</tr>
+</table>
+</html>
+
+
+=== 時間計測の仕方
+
+StopWatchクラス（後述)を使う。
+<code>
+StopWatch stopWatch = new StopWatch();
+
+double elapsedTime = 0;
+
+stopWatch.reset(); //計測開始
+// 何か演算を行う
+elapsedTime = stopWatch.getElapsedTime(); // 秒(sec.)単位で実行時間が計測できる
+
+// データベースにelapsedTimeを記録
+
+stopWatch.reset(); //計測開始(StopWatchをリセット）
+// 何か演算を行う
+elapsedTime = stopWatch.getElapsedTime(); // 計測
+
+// データベースにelapsedTimeを記録
+
+...
+</code>
+
+=== StopWatch.java
+<code>
+public class StopWatch
+{
+
+    private long initialSystemTIme;
+    private long lastSystemTime;
+
+    public StopWatch()
+    {
+        reset();
+    }
+
+    /**
+     * Gets the elapsed time since this instance is created in seconds.
+     * 
+     * @return the elapsed time in seconds.
+     */
+    public double getElapsedTime()
+    {
+        lastSystemTime = System.currentTimeMillis();
+        long diff = lastSystemTime - initialSystemTIme;
+        return diff / 1000.0;
+    }
+
+    /**
+     * Gets the interval time since the last call of
+     * {@link StopWatch#getEleapsedTime()} or
+     * {@link StopWatch#getIntervalTime()}
+     * 
+     * @return the interval time in seconds
+     */
+    public double getIntervalTime()
+    {
+        long now = System.currentTimeMillis();
+        long diff = now - lastSystemTime;
+        lastSystemTime = now;
+        return diff / 1000.0;
+    }
+
+    /**
+     * Reset the stop watch. The subsequent calls to
+     * {@link StopWatch#getEleapsedTime()} or
+     * {@link StopWatch#getIntervalTime()} will measure the time intervals
+     * beginning from this method call.
+     */
+    public void reset()
+    {
+        initialSystemTIme = System.currentTimeMillis();
+        lastSystemTime = initialSystemTIme;
+    }
+
+}
+</code>

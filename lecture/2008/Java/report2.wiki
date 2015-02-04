@@ -1,0 +1,41 @@
+= レポート課題２
+
+１から順に数を数えていき、３で割り切れるときは数字の代わりにFizzと表示し、５で割り切れるときはBuzzと表示するプログラム、FizzBuzz.java を作成せよ。３でも５でも割り切れるときは、FizzBuzzと表示させること。
+
+
+* FizzBuzz.java
+<code>
+
+public class FizzBuzz
+{
+  public static void main(String[] args)
+  {
+     // Fizz, Buzzと表示するプログラム
+  }
+}
+
+</code>
+
+== 余談
+余裕があれば、「世界のあの人」を真似たプログラムにしてもよい。
+「3が付く数字のときだけ○○になって、5の倍数のときに△■になります」
+
+3が付く数字を判定するには、int型をString型に変換して１文字ずつ調べるとよい。（もっと良い方法が他にあるかも）
+<code>
+int a = 3;
+String num = Integer.toString(a);
+for(int i=0; i<num.length(); i++)
+{
+   if(num.charAt(i) == '3')
+   {
+      // 3がつく数字だ
+   }
+}
+</code>
+
+
+== 面接に出るFizzBuzzゲーム？
+
+FizzBuzzゲームは、本当にプログラムを書ける人かどうかをテストするのに良いという話。
+* [http://www.aoky.net/articles/jeff_atwood/why_cant_programmers_program.htm どうしてプログラマに、、、プログラムが書けないのか？]
+

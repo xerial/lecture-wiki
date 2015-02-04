@@ -1,0 +1,157 @@
+
+
+
+= ストリーム入出力
+
+== InputStream
+
+!InputStream は、データを読み込むためのインターフェースです。InputStreamの実装として、ファイルからデータを読むためのFileInputStream, メモリ上のbyte[]配列からデータを読むためのByteArrayInputStreamなどがあります。キーボードから入力を受け付けるSystem.inもInputStreamの実装の一つです。　
+
+InputStreamは、通常byte単位(1byte = 8bit）でデータを読むのに使われます。
+
+=== ファイルをコピーする例
+source.txtというファイルを読み、dest.txtというファイルに書き込む例
+<code>
+FileInputStream in = null;
+FileOutputStream out = null;
+try
+{
+  try {
+    in = new FileInputStream("source.txt");
+    out = new FileOutputStream("dest.txt");
+    int c;
+　　// fileから1 byteずつデータを読む
+    while ((c = in.read()) != -1) {
+      out.write(c);
+    }
+  } finally {
+    // 開いたファイルは必ず閉じる　
+    if (in != null) {
+      in.close();
+    }
+    // ファイルを閉じないと、データが完全に書き込まれず
+    // 中途半端なファイルになることがある
+    if (out != null) {
+      out.close();
+    }
+  }
+}
+catch(IOException e)
+{
+  e.printStackTrace();
+}
+</code>
+
+[image/byteStream.png]
+
+== ReaderとWriter (Character Streams)
+
+* http://java.sun.com/docs/books/tutorial/essential/io/charstreams.html
+
+InputStreamは、byteというCPUで最少の単位でデータを読み出すもっともprimitiveな入力方法です。日本語の文字列など、1文字が2byte以上で表現されるデータであったり、文字コードが異なる言語を扱うのには、Readerを使うと便利です。
+
+使い方はInputStream, OutputStreamとほとんど変わりません
+<code>
+FileReader inputStream = null;
+FileWriter outputStream = null;
+
+try {
+    inputStream = new FileReader("source.txt");
+    outputStream = new FileWriter("dest.txt");
+
+    int c;
+　　// cには2 bytes分のデータが読まれる
+    while ((c = inputStream.read()) != -1) {
+        outputStream.write(c);
+    }
+} finally {
+    if (inputStream != null) {
+        inputStream.close();
+    }
+    if (outputStream != null) {
+        outputStream.close();
+    }
+}
+</code>
+== InputStreamをReaderに
+
+InputStreamReaderや、OutputStreamWriterを使うと、InputStreamやOutputSreamを、Reader, Writerとして扱うことができます。
+
+<code>
+Reader reader = new InputStreamReader(new FileInputStream("source.txt"));
+</code>
+
+== 一行ずつデータを読む
+データを一行ずつ読みたいというときにはBufferedReaderを使います。BufferedReaderのreadLineというメソッドは、改行文字("\n", "\r", "\r\n"など)の扱いを簡単にしてくれます。PrintWriterを使うと、一行ずつファイルに書き込むことが、printlnメソッドでできるようになります。
+
+=== ネットワーク上のデータ一行ずつを読み、ファイルに保存する例
+<code>
+BufferedReader reader = null;
+PrintWriter writer = null;
+try {
+   // URLに接続
+　 URL url = new URL("http://www.xerial.org/");
+　 URLConnection connection = url.openConnection();
+   // バッファ付きでネットワーク上のデータを読む
+   reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+   writer = new PrintWriter(new FileWriter("out.txt"));
+
+   for(String line; (line = reader.readLine()) != null; )
+   {
+   　　writer.println(line);
+   }
+} 
+finally {
+   if(reader != null)
+      reader.close();
+   if(writer != null)
+      writer.close();
+}
+</code>
+
+== バッファ付きの入出力
+FileInputStream, FileOutputStreamなどは、readメソッドを呼び出すと、ハードディスクに直接アクセスしに行きます。通常、ハードディスクは大きな単位でデータを読み書きするのに優れ、こまごまとしたデータの読み書きの場合、ディスクのヘッドを移動するオーバーヘッドが大きいため、性能が十分に引き出せません。
+
+そこで、ディスクにアクセスする前のクッションとして、メモリ上にバッファをつくり、まとまった単位でデータを読み書きするための、BufferedReader, BufferedWriter をReaderやWriterの上にかぶせて使います。
+
+<code>
+reader = new BufferedReader(new FileReader("source.txt"));
+writer = new PrintWriter(new BufferedWriter(new FileWriter("out.txt")));
+
+for(String line; (line = reader.readLine()) != null; )
+{
+　　writer.println(line);
+}
+// バッファを綺麗にする
+writer.flush();
+
+</code>
+
+バッファにたまっているデータは、バッファがいっぱいになってきたところで自動でファイルに書き出されますが、手動でファイルに即座に書き込みたい場合にはflush()を使います。PrintWriterなどのprintln()では、自動的にflush()が呼ばれます。
+
+== タブ区切りのデータの各行を、タブ位置で分割する
+
+タブ区切りデータや、CVS形式などのカンマ区切りのデータを分割するには、Stringクラスのsplitメソッドを使います。
+
+<code>
+BufferedReader reader = null;
+
+try {
+  reader = new BufferedReader(new FileReader("source.txt"));
+
+  // read lines
+  while ((line = reader.readLine()) != null)
+  {
+     // タブ位置で行を分割
+     String[] columns = line.split("\t");
+  }
+} 
+finally {
+   if(reader != null)
+      reader.close();
+}
+</code>
+
+
+
+

@@ -1,0 +1,109 @@
+@title("クラスの定義")
+
+= オブジェクト定義
+
+== クラスの初期化
+
+MyClassという名前のクラスがあるとき、
+<code>
+MyClass m1 = new MyClass();
+MyClass m2 = new MyClass();
+</code>
+と初期化できる。ここで、m1, m2はMyClassの{b|インスタンス}と呼ばれる。また、引数なしのコンストラクタのことを、{b|デフォルトコンストラクタ}と呼ぶ。
+
+=== MyClass.java
+<code>
+public class MyClass {
+
+　 // static変数 クラスのインスタンス間で共有される
+　 public static final String UNKNOWN_USER = "unknown";  
+
+   // インスタンスごとに存在する変数（インスタンス変数）
+   private String name;
+   private Date createdAt;
+  
+   // デフォルトコンストラクタ　
+   public MyClass() {
+   　　// 他のコンストラクタに初期化を任せるときはこう書く。MyClass(String name)が呼ばれる     
+       this("unknown"); 
+   }
+
+   public MyClass(String name) {
+       this.name = name;
+       setCreatedAt(new Date()); // インスタンスを作った日時をセット
+   }
+
+   // publicメソッド。 m1.getName()で呼び出せる
+   public String getName() { return name; }
+
+   // privateメソッド。 m1.setCreatedAt(...)という形では使えない。
+   // MyClassのメソッド内からのみ見えるメソッド
+   private void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+
+   // staticメソッド。インスタンス変数を全く使わないメソッドはstaticにできる。
+   // このメソッドは、MyClass.square(10)、などの形式でインスタンスがなくても使える。
+   public static int square(int x) { return x * x; } 
+}
+</code>
+
+== static変数
+
+static変数はクラスのインスタンスではなく、クラスそのものに付属する変数である。
+
+クラス内で、public staticで宣言された変数は、クラス名.変数名の形式でアクセスできる。下の３種類のアクセス方法はどれも同じUNKOWN_USERという文字列（の同一インスタンス）を参照している。
+<code>
+MyClass.UKNOWN_USER;  // "unknown"
+m1.UNKNOWN_USER
+m2.UNKNOWN_USER
+</code>
+
+== staticメソッド
+staticメソッドは、インスタンス変数を一切使わずに実装できるメソッドである場合に使われる。staticメソッドにする利点は、クラス名.staticメソッド名(...)の形式でメソッドを使える点にある。
+<code>
+public static int square(int x) { return x * x; } 
+</code>
+
+== インスタンスメソッド
+static以外のメソッドはすべてインスタンスメソッドであり、
+<code>
+public String getName() { return name; }
+</code>
+などは、インスタンス変数にアクセスしているので、staticメソッドにはできない。
+
+== public, private, protected 
+
+メソッド名にpublicをつけると、インスタンス.メソッド名の形式でつかえるメソッドになる。privateにすると、クラス内からしか使えない。protectedは継承関係にあるクラス同士で使えるメソッドである。privateメソッドはクラス内部での計算補助用に使うことが多い。
+
+private, protectedは、以下のように、実装を共有する目的で使う共通の親クラスのコンストラクタに使うこともあります。
+
+<code>
+public abstract class PlayerBase implements Player {
+    private String name;
+
+    // PlayerBase p = new PlayerBase() という形式を使えなくする。
+    private PlayerBase() { } 
+
+　　// PlayerBaseを継承したクラスからしか、このコンストラクタを呼べない
+    // つまりsuper(name)という呼び出しのみ許可する
+    protected PlayerBase(String name) {
+    　　this.name = name;
+    }
+
+    public String getName() { return name; } 
+
+    public void displayMessage(String countMessage) { 
+       System.out.println(String.format("[%s] %s", getName(), countMessage);	
+    }
+
+    // 抽象メソッド。実装は定義しない
+    public abstract void say(int i);
+
+}
+</code>
+
+
+
+
+
+
+

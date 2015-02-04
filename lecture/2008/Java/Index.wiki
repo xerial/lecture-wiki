@@ -1,0 +1,190 @@
+@title("生物情報科学実験I Java基礎")
+
+= 2008年度 生物情報科学実験I Java基礎
+* URL: http://www.xerial.org/wiki/lecture/2008/Java/Index
+
+*講義日程
+**2008年8月5日から8月8日までの4日間
+
+* [introduction 講義の概要] 
+
+===注意
+このページは、Internet Explorerではなく、Firefoxを使うとソースコードに色がついて読みやすくなります。Firefoxをお勧めします。
+
+= 第1回 8月5日 プログラムの書き方
+
+== Javaの仕組みと文法
+* [FirstProgram プログラムを実行する]
+* [Expression 変数と式]
+* [Type 型]
+* [Operator 算術演算]
+* [Comparator 比較演算]
+* [Comment コメント文]
+
+* 制御構造
+** [IfStatement if文による条件分岐] (if, then, else)
+** [WhileClause while文による反復]
+
+** [ForClause for ループ] 
+** [BreakAndContinue  ループの強制終了と強制進行]
+
+
+* [LogicalOperator 論理演算]
+
+
+
+* [MethodDefinition メソッド定義]
+* [Recursion 再帰呼び出し]
+
+//* java.lang.Math 高度な演算
+
+//* キーボードからの入力を受け付ける方法
+== Eclipse (Javaの開発環境)
+* [eclipse Eclipseの使い方]
+** Eclipseを起動する
+** 新しいプロジェクトを作成する
+** クラスを作成する
+** コード補完機能を使う
+** プログラムを実行する
+** プログラムをデバッグする
+*** ブレークポイントの設定
+*** 実行中の変数の値の変化を見る
+
+== 課題
+
+* 課題1. [report1 HelloWorld]
+* 課題2. [report2 FizzBuzz]
+* 課題3. [report3 複利計算]
+* 課題4. [report4 税額計算]
+== チャレンジ課題
+* 課題C1. [reportC1 ハノイの塔]
+
+
+
+
+= 第2回 8月6日 データ構造とオブジェクト
+
+
+* [Switch switch文による条件分岐]
+//* [DoWhileClause do while ループ]
+* [BitOperator ビット演算子]
+* [Scope 変数のスコープ]
+
+
+== 配列
+* [Array 配列]
+* [MultiArray 多次元配列]
+
+
+== オブジェクト指向プログラミング
+* [ObjectOriented オブジェクト指向とは]
+
+== データ構造
+
+* [Collection Javaで使えるデータ構造 Collection]
+//* List
+//** ArrayList, LinkedList
+//* Set
+//** SortedSet, HashSet
+//* Map 
+//** SortedMap, HashMap
+
+//* Generics
+//* Auto Boxing Unboxing
+//* リストのリスト
+
+== Eclipse
+* [EclipseJavadoc JavaDocでクラスのメソッドを調べる]
+* [JUnit JUnitを用いたテストコードの作成]
+* [jar Jarファイルの作成]
+
+
+== レポート課題
+* 課題5. [report5 ゲノム配列のreverse strand]
+* 課題6. [report6 配列データの管理]
+
+== チャレンジ課題
+* 課題C2. [reportC2 ２分木を用いた、一般の木構造の探索]
+
+
+= 第3回 8月7日 GUIアプリケーションとデータの入出力
+
+* [Day3 印刷用ページ]
+
+== Java
+* [Enum 列挙型 enum]
+* [Exception 例外]
+
+//* Javaのパッケージ
+
+== 文字列
+* [String 文字列Stringの扱い]
+* [Regex 正規表現によるパターンマッチ]
+
+==オブジェクト・クラス
+* [ClassDefinition クラスの定義、インスタンスとメソッドのアクセス制御]
+** コンストラクタ
+** クラスの初期化
+** インスタンス
+** static変数、staticメソッド
+** public, privateによるアクセス制御
+
+//* [Extension クラスの継承]
+//** スーパークラス
+//** インターフェース
+//** メソッドのオーバーロード
+//** 多相型
+
+
+
+
+
+==入出力を伴うプログラム
+* [InputStream 入出力]
+** ファイルの読み書き
+** ネットワークに接続
+
+//** リソースの取得 getResource()
+
+
+== GUIアプリケーション
+
+* [Swing Java SwingでGUIアプリケーションをつくる]
+
+
+==レポート課題
+* 課題7. [report7 正規表現検索アプリケーション]
+* 課題8. [report8 テーブルデータの読み込みと表示]
+
+==チャレンジ課題
+
+* 課題C3. [reportC3 データベースブラウザの作成]
+
+= 第4回 8月8日 応用編：データベースアプリケーション
+
+* [Day4 印刷用ページ]
+
+//* デザインパターン
+//* 画像を描く
+
+== データベースシステムを使う
+* [RelationalDatabase リレーショナルデータベースとSQL]
+** リレーショナルデータベースとは？
+** テーブルの作成
+** データの追加
+** データの検索
+** 集約演算
+* [SQLiteJDBC SQLite JDBCを使ってJavaからデータベースを扱う]
+** JDBCでデータベースを更新、検索する
+** 外部ライブラリ(Jar)を使う
+** クラスパスの設定
+
+
+==レポート課題
+* 課題9. [report9 データベースでピボット演算]
+//* 課題10. [report10 データベースで集計演算]
+
+==チャレンジ課題
+* 課題C4. [reportC4 Twitterクライアントの作成]
+
+

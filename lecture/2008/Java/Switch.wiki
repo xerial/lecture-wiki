@@ -1,0 +1,25 @@
+@title("Switch文")
+
+= switch文による条件分岐
+
+switch文を使うとif文をネストさせるより、条件分岐をわかりやすく書ける場合があります。
+
+<code>
+int value = 2;
+
+switch(value) {
+case 1: 
+   // valueが1のとき実行される
+   break;
+case 2: 
+   // valueが2のとき実行される
+   break;
+case 3:
+   // valueが3のとき実行される
+   break;
+default: 
+   // valueがどのcase文とも一致しないとき実行される
+   break;
+}
+</code>
+

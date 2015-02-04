@@ -1,0 +1,102 @@
+= JAR (Java Archive)ファイルの作成
+
+Java言語の長所は、一度コンパイルしたクラスが、多くのOS（Windows, Mac OS X, Linuxなど）で動作することです。これは、Java Virtual Machine (JVM)と呼ばれる仮想機械上で、Javaのコードが実行されるためです。JVMの実装は、OS毎に異なっていますが、これはOS間の違いなどをJVM側で吸収して、プログラマがOSの違いを意識せずコードを書けるようにするための配慮です。
+
+Perl, Rubyなどのスクリプト言語も様々な環境で動作しますが、これらの言語は事前のコンパイル無しに、実行時にソースコードを解析してプログラムを実行するので、必ずしも高速ではありません。一方、C言語、C++言語で書かれたプログラムは、各OSで直接実行できるバイナリファイル（実行ファイル .exe, a.outなど）にコンパイルして実行するので高速ですが、OS間での互換性がほとんどありません。
+
+高速、かつ portability (移動のしやすさ）を兼ね備えた言語は2008年現在のところ、Javaのみです。Javaでは通常、コンパイル後に複数のクラスファイル（.class)が作成されるので、これらを持ち運びしやすいように１つにまとめたものが、JAR (Java ARchive 書庫)ファイルです。JARファイルは、jarコマンドを用いて作成することができます。
+
+作成されたJARファイルは、様々なOSで実行させることができますので、自分で作成したプログラムを人に使ってもらうときに役立ちます。また、他のマシンでプログラムを実行するときにも、jarファイルをコピーするだけで実行できるので便利です。
+
+== ライブラリ用（他のプロジェクトで自分のコードを再利用するため）のJARフィルを作成する
+
+カレントフォルダにあるすべてのクラスファイルをまとめて、hello-world.jar (JARファイル）を作成する:
+<code>
+> jar -cvf hello-world.jar *.class
+</code>
+
+== main(String[] args)を実行できるJARファイルを作成する
+
+たくさんあるクラスファイル中のどのmain関数を実行するかを指定するために、マニフェストファイルが必要です。
+
+helloworld.mf  (hello worldを実行するためのマニフェストファイル. 拡張子は.mf）
+<code>
+Manifest-Version: 1.0
+Main-Class: HelloWorld
+</code>
+
+HelloWorld.classを含むJarファイルの作成
+<code>
+> jar -cvf hello-world-bin.jar helloworld.mf HelloWorld.class
+</code>
+
+hello-world-bin.jarが作成される。
+
+== マニフェストを含むJARファイルからプログラムを実行する
+<code>
+> java -jar hello-world-bin.jar 
+Hello World!
+</code>
+
+
+
+= EclipseからJarを作成する
+普段はEclipseからJARを作成する方が間違いが少ないでしょう。
+
+プロジェクトで右クリック - Exportを選択
+[image/jarexport.png]
+
+JAR fileを選択
+[image/exportselect.png]
+
+JARに含めるプロジェクトを選択。レポート用のJARにはソースコードを含めたいので、Export Java source files and resoucesを{b|必ず}チェックすること。また、JARのファイル名を入力して、Nextをクリック。
+[image/exportfile.png]
+
+あとで同じ設定でJARを作りなおしたい場合は、以下をチェックしてファイルを保存しておく。
+[image/save-description.png]
+
+
+特定の、mainメソッドを実行できるようにするためには以下で実行させたいmainを含むクラスを選択すると良い。
+[image/selectmain.png]
+
+Finishを押すとJARファイルが作成される。
+
+== JARファイルの内容の確認
+jarのtオプションを使います。
+<code>
+leo@raquel~/java> jar tvf genome-sequence.jar
+    25 Wed Aug 06 04:39:04 JST 2008 META-INF/MANIFEST.MF
+  1178 Wed Aug 06 04:08:36 JST 2008 GenomeSequence.class
+   878 Wed Aug 06 04:08:36 JST 2008 GenomeSequence.java
+   276 Wed Aug 06 03:26:06 JST 2008 SequenceContainer.class
+    44 Wed Aug 06 03:26:06 JST 2008 SequenceContainer.java
+  1131 Wed Aug 06 04:38:56 JST 2008 GenomeSequenceTest.class
+   670 Wed Aug 06 04:38:56 JST 2008 GenomeSequenceTest.java
+   353 Wed Aug 06 01:00:46 JST 2008 .classpath
+   384 Wed Aug 06 00:50:00 JST 2008 .project
+  1044 Wed Aug 06 04:27:00 JST 2008 genome-sequence.jardesc
+</code>
+
+レポート用のJARを作成する場合は、class, javaの両方が入っていることを確認してください。
+
+== Runnable Jar
+
+Eclipse3.4から、Runnable JAR（あるmainから実行できるようにManifestを自動で作成し、外部ライブラリのクラスファイルもJARの中に同梱する)を手早く作成できるようになりました。ただし、{b|ソースコードが含まれないJARができてしまう}ので、レポート送信のときには、面倒でも上にあげた方法で、ソースコード同梱のJARを作成してください。
+
+
+== テストコードを含むJARファイルからJUnitを実行
+
+カレント（現在居る）ディレクトリに、junitのJARファイル(junit-4.1.jarなど)と、今作ったJARファイルがある状態で、以下のようにコマンドを実行する。
+
+<code>
+> java -cp ".;junit-4.1.jar;genome-sequence.jar" org.junit.runner.JUnitCore GenomeSequenceTest
+JUnit version 4.1
+....
+Time: 0.033
+
+OK (4 tests)
+
+</code>
+
+これで、GenomeSequenceTestが実行されて結果が表示された。
+

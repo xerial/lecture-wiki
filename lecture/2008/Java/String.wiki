@@ -1,0 +1,50 @@
+@title("String")
+
+= String
+
+<code>
+String s = "ABCDEF";
+s.substring(1); // "BCDEF"
+s.substring(2, 4); // "CD"
+
+s.charAt(0);   // 'A'
+s.charAt(1);   // 'B'
+
+String s2 = "ABC";
+
+// 文字列の比較にはequalsメソッドを使う (==ではない）
+if(s.equals(s2)) {
+
+}
+else {
+
+}
+
+int pos = s.indexOf("B");   // pos = 1
+int pos2 = s.indexOf("X");   // pos = -1
+
+</code>
+
+
+==特殊文字
+
+<code>
+\r　　キャリッジリターン
+\n　　改行　　
+\t    タブ
+</code>
+
+== 文字列の作成
+
+StringBuilderを使って、appendしていく。
+<code>
+StringBuilder buf = new StringBuilder();
+buf.append("Hello");
+buf.append("World!");
+String result = buf.toString();　 // "HelloWorld!"
+</code>
+
+
+
+
+

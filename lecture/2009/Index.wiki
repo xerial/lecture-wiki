@@ -1,0 +1,12 @@
+@title("2009年度 生物情報科学科 情報基礎実験 資料")
+
+= 2009年度 生物情報科学科 情報基礎実験
+== 資料
+* 演習スケジュール
+**http://mlab.cb.k.u-tokyo.ac.jp/~moris/lecture/2009-winter-experiments/schedule.htm
+
+* [Setup プログラミング環境のセットアップ]
+* [Report レポート提出用システムについて]
+
+* [Report4 課題4 External Sortingの実装]
+

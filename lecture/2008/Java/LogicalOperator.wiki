@@ -1,0 +1,78 @@
+@title("論理演算")
+
+= 論理演算
+
+論理演算を用いると、条件をand, orで連結して複雑な条件をつくることができます。
+
+== 論理積 AND 
+<code>
+if(age >= 50 && gender == 1)
+{
+   // 50歳以上でかつgenderが1の場合
+}  
+</code>
+
+== 論理和 OR
+<code>
+if(age == 23 || age == 24)
+{
+   // ageが23歳か、24歳のとき
+}  
+</code>
+
+== 否定 NOT
+!を使うと、式の真偽値をひっくり返すことができます。
+<code>
+if(!(age >= 50))
+{
+   // 50歳以上でないとき
+}  
+</code>
+
+== 論理演算の組み合わせ
+<code>
+if(!(age >= 50 || age < 20) && gender == 1)
+{
+   // 50歳以上または20歳未満でなく、かつ、genderが1の人
+}  
+</code>
+
+これは、以下のように書いても同じです。([http://ja.wikipedia.org/wiki/%E3%83%89%E3%83%BB%E3%83%A2%E3%83%AB%E3%82%AC%E3%83%B3%E3%81%AE%E6%B3%95%E5%89%87 ド・モルガンの法則])
+<code>
+if((age < 50 && age >= 20) && gender == 1)
+{
+   // 50歳以上または20歳未満でなく、かつ、genderが1の人
+   // 転じて、50歳未満かつ20歳以上で、かつ、genderが1の人
+}  
+</code>
+
+
+==真理値表
+
+===AND
+両方の式が真(true)のときのみ、その論理積は真。それ以外は、偽(false)
+<code>
+式1    式2     式1 && 式2
+false  false   false
+false  true    false
+true   false   false
+true   true    true
+</code>
+
+===OR
+どちらからの式が真(true)であれば、その論理和も真
+<code>
+式1    式2     式1 || 式2
+false  false   false
+false  true    true
+true   false   true
+true   true    true
+</code>
+
+===NOT
+式の真偽値を反転させます
+<code>
+式1    !式1
+false  true
+true   false
+</code>

@@ -1,0 +1,167 @@
+
+= 最初のプログラム
+
+Javaがどのように実行されるかを確認するため、画面上にHello World!と出力するプログラムを作ります。
+
+まず、テキストエディタ（メモ帳など）でHelloWorld.javaというプログラムを作成します。
+
+HelloWorld.java
+<code>
+public class HelloWorld 
+{
+  public static void main(String[] args)
+  {
+     System.out.println("Hello World!");
+  }
+}
+</code>
+
+このプログラムでは、HelloWorldというクラス(クラスについては後で説明する）を作成し、その中にmainという名前のメソッド(関数とも言う）を定義しています。public static void main(String[] args)というメソッドは、Javaでは特別な意味を持っていて、プログラムを実行するため入口として用いられます。
+
+<code>
+System.out.println("文字列");
+</code>
+は、システムの標準出力(out)に、文字列を出力して改行する(println: print line)という意味です。
+
+
+=== 注意: ファイル名のつけ方
+
+Javaでは、ソースコードのファイル名は、
+<code> 
+public class XXXX  
+{
+
+}
+</code>
+と書かれているXXXXの部分と一致している必要があります。この場合は、XXXX.javaというファイル名にソースコードを保存します。大文字小文字も合わせます。
+
+
+
+= Javaを使うための環境設定
+次に、このJavaプログラムをコンパイル（コンピュータが実行できる形式に変換）します。コンパイルを実行するには、シェル（コマンドを入力するためのインターフェース）を使います。
+
+=== Windows
+コマンドプロンプト(Windowsボタン-すべてのプログラム-アクセサリに含まれます）、あるいはCygwinを開きます。
+=== Mac OS & Linux
+Terminalを開きます。
+
+== Javacの動作確認
+まず、javac (Java Compiler)が使えるかどうか確認します。
+
+<code>
+C:\Users\leo\java>javac
+'javac' は、内部コマンドまたは外部コマンド、
+操作可能なプログラムまたはバッチ ファイルとして認識されていません。
+</code>
+
+上のようなメッセージが表示された場合は、Java Development Toolkit (JDK)がインストールされていないか、PATH変数で指定されているフォルダのリストからjavacというプログラムが見つけられない、ということを意味します。
+
+== JDKのインストール
+
+演習用のマシンにはすでにJDKがインストールされています。C:\Java\jdk1.5.0_15 など。
+javacコマンドは通常、C:\Java\jdk1.5.0_15\binに含まれています。
+
+自宅のマシンにインストールする場合は、SunのJavaのページ http://java.sun.com/ からJDK(注意：JREではありません）をダウンロードしてインストールします。
+
+== PATH変数の設定
+
+=== Windows
+Windowsキー+Pauseを押して、「システムの詳細設定」を開きます。詳細設定-環境変数のページを開き、ユーザー環境変数にPATHを追加します。
+
+[image/path.png]
+
+設定後、コマンドプロンプトなどを一度閉じて、再度開きます。
+
+=== Windows(cygwin), Mac OS, Linux
+$HOME/.profile (zshを使用している場合は、.zprofile) を編集して、以下の記述を追加します。
+
+* cygwin (Windows)での設定例 
+<code>
+export JAVA_HOME="/cygdrive/c/Program Files/Java/jdk1.5.0_15"
+export PATH=$JAVA_HOME/bin:$PATH
+</code>
+
+JAVA_HOMEの部分は、JDKがインストールされているフォルダを指すように変更すること。
+
+
+*編集後、以下を実行します。
+<code>
+> source ~/.profile
+</code>
+
+== 確認
+
+javacが使えることを確認します。
+<code>
+C:\Users\leo>javac
+使い方: javac <options> <source files>
+使用可能なオプションには次のものがあります。
+  -g                         すべてのデバッグ情報を生成する
+  -g:none                    デバッグ情報を生成しない
+  -g:{lines,vars,source}     いくつかのデバッグ情報だけを生成する
+  -nowarn                    警告を発生させない
+  -verbose                   コンパイラの動作についてメッセージを出力する
+  -deprecation               推奨されない API が使用されているソースの位置を出力
+... 
+</code>
+
+上記のように表示されたら準備ができています！
+
+= Javaプログラムのコンパイル
+
+プログラムをコンピュータが実行できる形式に変換することをコンパイル(compile)するといいます。
+
+cd (change directory)コマンドで、HelloWorld.javaが保存されているフォルダまで移動します。
+たとえば、HelloWorld.javaプログラムが、c:\Users\leo\javaに保存されていたとします。
+
+<code>
+C:\Users\leo> cd java
+C:\Users\leo\java> 
+</code>
+
+==コンパイル
+<code>
+C:\Users\leo\java> javac HelloWorld.java
+
+C:\Users\leo\java> 
+</code>
+
+コンパイルが正常に終了すると、HelloWorld.classというファイルができています。
+
+==プログラムの実行
+<code>
+C:\Users\leo\java> java HelloWorld
+Hello World!
+
+C:\Users\leo\java> 
+</code>
+
+
+==コンパイルエラー
+
+プログラムの構文に誤りがあると、エラーが報告されます。たとえば、以下のソースコードをコンパイルすると、
+<code>
+public class HelloWorld 
+{
+  public static void main(String[] args)
+  {
+     System.out.println("Hello World!")
+  }
+}
+</code>
+
+このようなエラーが表示されます。
+<code>
+C:\Users\leo\java>javac HelloWorld.java
+HelloWorld.java:6: ';' がありません。
+  }
+  ^
+エラー 1 個
+</code>
+
+これは、行末にセミコロン(;)を入力し忘れている、というエラーです。セミコロンを追加して、javacコマンドを再度実行しましょう。
+
+
+
+
+

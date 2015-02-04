@@ -1,0 +1,140 @@
+@title("forループ")
+
+= for文によるループ(反復)処理
+
+for文を使うと繰り返しの処理が簡単に書けるようになります。
+
+<code>
+for(int i=1; i<=10; i++)
+{
+   System.out.println("Hello World!");
+}
+</code>
+
+実行結果
+<code>
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+</code>
+
+for文の中身は、
+<code>
+for (変数の初期化; ループを続ける条件; 各ループ終了時に実行するコード) {
+    文；
+}
+</code>
+となっています。forのカッコ( )内の各項目はからであっても構いません。
+
+<code>
+for(int i=1; i<=10; i++)
+{
+   System.out.println("Hello World!");
+}
+</code>
+というコードは、以下のように実行されます。
+
+<code>
+int i=1;
+
+// i=1
+System.out.println("Hello World!");
+i++;　// iの値を1増やす
+
+// i=2
+System.out.println("Hello World!");
+i++;
+
+...
+
+// i=10
+System.out.println("Hello World!");
+i++;
+
+// i=11で終了
+</code>
+
+== for文のネスト
+
+ループの中でもう一つのループを回すこともできます。
+
+<code>
+for(int row=1; row<=3; row++) {
+  System.out.print("row " + row + ": ");
+  for(int col=0; col<=5; col++) {
+    System.out.print(row * col + " ");
+  }
+  System.out.println();
+}
+</code>
+
+実行結果
+<code>
+row 1: 0 1 2 3 4 5
+row 2: 0 2 4 6 8 10 
+row 3: 0 3 6 9 12 15
+</code>
+
+== forループの使用例
+
+iを1から10まで1ずつ増やしていく
+<code>
+for(int i=1; i<=10; i++)
+</code>
+
+iを10から0まで1ずつ減らしていく
+<code>
+for(int i=10; i>=0; i--)
+</code>
+
+iを1から100まで2ずつ増やしていく
+<code>
+for(int i=1; i<=100; i+=2)
+</code>
+
+
+
+== whileとfor
+
+[WhileClause while文]と同じことはfor文でも記述できます。
+
+<code>
+int product = 2;
+while(product <= 1000)
+{
+   product = product * 2;
+   System.our.println(product);
+}
+</code>
+は、for文で書くと
+<code>
+int product = 2;
+for( ; product <= 1000; )
+{
+   product = product * 2;
+   System.our.println(product);
+}
+</code>
+となります。
+
+<code>
+while(true) {
+
+}
+</code>
+
+は、
+<code>
+for( ; ; ) { 
+
+}
+</code>
+に対応します。
+

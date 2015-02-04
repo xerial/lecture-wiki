@@ -1,0 +1,104 @@
+@title("条件分岐")
+
+= If文による条件分岐
+
+特定の条件によって実行したいプログラムを変更するときは、if文を使います。
+<code>
+if(条件式) {
+  // 条件式がtrueのときに実行される
+} else {
+  // 条件式がfalseのときに実行される
+}
+</code>
+
+プログラム例:
+<code>
+int score = 70;
+
+if(score >= 80) {
+   System.out.println("80点以上");	 
+} else {
+   System.out.println("80点未満");	 
+}
+</code>
+
+結果
+<code>
+80点未満
+</code>
+
+=== カッコの省略
+
+上の式はカギカッコを使わずに
+<code>
+if(score >= 80) 
+   System.out.println("80点以上");	 
+else 
+   System.out.println("80点未満");	 
+</code>
+と書くこともできます。この場合、条件式に続く命令は１行に納まっている必要があります。
+
+たとえば、以下のように書くと、
+<code>
+if(score >= 80) 
+   System.out.println("80点以上");	 
+   System.out.println("Grade A");  
+</code>
+
+下のように書いたのと同じとみなされます。
+<code>
+if(score >= 80) 
+   System.out.println("80点以上"); // scoreが80以上のときのみ実行される	 
+System.out.println("Grade A");  // scoreの値にかかわらず実行される
+</code>
+
+混乱を防ぐため、if文のあとの節には常にカッコをつけておくようにするのもよいでしょう。
+
+
+== 条件演算子 if文の省略系
+
+上のコードは、 
+<code>
+System.out.println(score >=80 ? "80点以上" : "80点未満");	 
+</code>
+と書くこともできます。
+
+===条件演算子の構文
+<code>
+(条件式) ? (条件式が真のときの値) : (条件式が偽のときの値)
+</code>
+
+条件演算子はプログラムをすっきり見せたいときに好んで使われます。
+
+== ネスト（入れ子）になった条件文
+
+if文を入れ子にすると、複数の条件に基づいて結果を分岐させることもできます。
+
+<code>
+int score = 70;
+
+if(score >= 80) {
+   System.out.println("80点以上");	 
+} 
+else {
+   if(score >= 70) {
+      System.out.println("80点未満 70点以上");	 
+   }
+   else { 
+      System.out.println("70点未満");	 
+   }    
+}
+</code>
+
+プログラムに慣れてくると、上の文と同じことを以下のように書きます。
+<code>
+int score = 70;
+
+if(score >= 80) {
+   System.out.println("80点以上");	 
+} else if (score >= 70) {
+   System.out.println("80点未満 70点以上");	 
+} else { 
+   System.out.println("70点未満");	 
+}
+</code>

@@ -1,0 +1,25 @@
+= レポート課題1
+
+HelloWorldと画面に表示するプログラム HelloWorld.javaを作成せよ。また、作成したソースコードのファイル HelloWorld.javaをレポート提出サイト http://lecture.utgenome.org/java2008 より投稿せよ。
+
+HelloWorld.java
+<code>
+public class HelloWorld
+{
+  public static void main(String[] args)
+  {
+     System.our.println("ここに表示する文字列を書く");
+  }
+}
+</code>
+
+cygwinから実行する方法
+<code>
+> javac Hello.java		// Hello.javaファイルをコンパイルして、Hello.class（バイトコード）を作成する
+> java Hello			// Hello classのmainメソッドを実行する
+HelloWorld
+</code>
+
+== 注意事項
+* ファイル名は、大文字、小文字の違いまで含めてクラス名 (public class ...に書かれている名前）と一致させる必要がある
+* プログラムの記述に構文的な間違いがある場合は、javac (Java Compiler)を実行した時点でエラーメッセージが表示される

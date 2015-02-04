@@ -1,0 +1,137 @@
+= チャレンジ課題4 Twitter Clientを作ろう 
+
+=== 注意
+わりと実装に時間がかかると思います。
+
+== Twitterって？
+
+Twitter (http://twitter.com) は、Web上で皆が140文字以内のメッセージを残していく、というごく単純なサービスです。著名人も多く参加していて、そういう人たちの会話も見ることができます。
+
+[image/twitter.png]
+
+==課題
+Twitterのpublic timelineのXMLデータを取得し、会話の内容、発言した人、発言日時などの情報を抜き出し、それをデータベースに保存する。そして、そのデータベースの内容を手軽に閲覧するためのGUIアプリケーションを作成しなさい。
+
+* 外部ライブラリを使用した場合は、EclipseでRunnable JARを作成すること
+* その場合、ソースコードはまた別途にJARでまとめて送ること
+
+== Twitter Web API
+
+* Twitter Web API http://groups.google.com/group/twitter-development-talk/web/api-documentation
+
+=== Public Timeline （最新の、世界中のみなの一言を取得する）
+* http://twitter.com/statuses/public_timeline.xml にアクセスすると、以下のようなXMLデータを取得できます。
+** Twitter側にアクセス制限されてしまわないように、2-3分に１アクセス程度に抑えるとよいでしょう。
+
+<code>
+<statuses type="array">
+    <status>
+      <created_at>Fri Aug 08 03:09:20 +0000 2008</created_at>
+      <id>881092392</id>
+      <text>Free breakfast sandwich at Panera Bread, if you bring in a donation for the mid ohio foodbank. Story on The Dispatch website.</text>
+      <source>twhirl</source>
+      <truncated>false</truncated>
+
+      <in_reply_to_status_id />
+      <in_reply_to_user_id />
+      <favorited>false</favorited>
+      <user>
+      <id>14895949</id>
+      <name>taz288</name>
+      <screen_name>taz288</screen_name>
+
+      <description>first year court reporting student</description>
+      <location>ohio</location>
+      <profile_image_url>http://s3.amazonaws.com/twitter_production/profile_images/55306912/scan0007_normal.jpg</profile_image_url>
+      <url></url>
+      <protected>false</protected>
+      <followers_count>28</followers_count>
+
+    </user>
+    </status><status>
+      <created_at>Fri Aug 08 03:09:20 +0000 2008</created_at>
+      <id>881092390</id>
+      <text>I just updated my Squidoo page: Designer Shoes From Copper Cockeral / http://tinyurl.com/6zh4px</text>
+      <source>squidoo</source>
+      <truncated>false</truncated>
+
+      <in_reply_to_status_id />
+      <in_reply_to_user_id />
+      <favorited>false</favorited>
+      <user>
+      <id>15423903</id>
+      <name>EelKat</name>
+      <screen_name>EelKat</screen_name>
+
+      <description>author, artist, CosPlayer, costumer, owned by 14 cats, the Bride of Lord Sesshomaru :)</description>
+      <location>Maine, USA</location>
+      <profile_image_url>http://s3.amazonaws.com/twitter_production/profile_images/56621126/2336767218_6259159819_m_normal.jpg</profile_image_url>
+      <url>http://www.squidoo.com/LordSesshomaruHistory</url>
+      <protected>false</protected>
+      <followers_count>180</followers_count>
+
+    </user>
+    </status>
+
+     ....
+</statuses>
+</code>
+
+== XMLデータの解析
+
+public_timelineのXMLデータは1行に1タグという形なので、Readerで読み取って、正規表現で解釈するのでも十分ですが、正確にデータを取得したい場合は、
+
+* XML Pull Parser http://www.xmlpull.org/ を使うとよいでしょう。
+
+
+
+== 定期的にTweetsを更新
+
+public timelineから定期的にデータを取得するには、スレッドによる並列処理が必要になるかもしれません。
+
+* Threadによる並列処理の解説 http://java.sun.com/docs/books/tutorial/essential/concurrency/index.html
+
+定期的にデータを取得する場合、例えば以下のように書きます。
+<code>
+class PeriodicalUpdator implements Runnable
+{
+  StopWatch stopWatch = new StopWatch();
+  
+  public void run() {
+
+    try {
+      for(;;) { 
+      double elapsedTime = stopWatch.getElapsedTime();
+      if(elapsedTime >= 3 * 60) {
+         // ３分経過
+　　　　 loadPublicTimeline();
+         stopWatch.reset();
+      }
+      else
+      {
+          Thread.sleep((3 * 60 - elapsedTime) * 1000);  // ３分経過するまで休む
+      }
+    }
+    catch (InterruptedException e) {
+        // 外部から終了を促された
+    }
+  }
+
+  public void loadPublicTimeline()
+  {
+     // timeline を取得  ...
+  }
+}
+</code>
+
+<code>
+PeriodicalUpdator p = new PeriodicalUpdator();
+// スレッドを使って並列実行
+Threat t = new Thread(p).start();
+
+
+
+// GUI終了時
+t.interrupt();       
+t.join();
+</code>

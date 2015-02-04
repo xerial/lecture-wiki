@@ -1,0 +1,58 @@
+= Type 型
+
+Javaではすべての変数に型(type)を指定する必要があります。
+
+== Primitive Data Type 基本データ型
+
+=== 整数型
+* int (integer) 
+**32bit 整数型
+** 31bitの２進数で表現できる数 先頭1bitはプラス・マイナスを表す　
+* long (long integer) 
+** 64bit 整数型
+** 63bitの２進数で表現できる数 先頭1bitはプラス・マイナスを表す　
+
+===小数点を含む数
+* float 
+** 32bit 単精度浮動小数点数
+* double 
+** 64bit 倍精度浮動小数点数
+** 科学計算では通常、floatより、doubleを使います
+
+=== データを表現する型
+* boolean 
+** true, falseの２値を表す型
+* byte  
+** 1byteのデータ
+* char　
+** 2byteで文字を表した型
+
+== 特殊型
+*void  
+** [MethodDefinition 関数]が何も返さないときにこの型の名前が使われる
+
+== Object型
+
+Javaでは、primitive型以外の変数はすべてObject型をもちます。オブジェクト型は、Javaでは、大文字から始まります。
+
+* String は文字列を表す型です
+
+
+= データの表現方法
+
+<code>
+int a = 10;
+int a2 = 0xFF;   // 16進数表現 FF(16進数）= 255 (10進数）
+
+double b = 100;
+
+double b2 = 10.3d;  // doubleであることを示すために
+double e = 3.0e-8;  // 3.0 の10のマイナス8乗
+
+boolean c = true;
+boolean d = false;
+
+long longValue = 10003499324234L;  // long型であることを示すためにLをつける
+</code>
+
+

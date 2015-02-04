@@ -1,0 +1,211 @@
+@title("2010年度 生物情報科学科 情報基礎実験 - Mercurialの使い方" )
+
+{b|2010年度 生物情報科学科 情報基礎実験 資料} 2010年11月5日
+* この資料のURL http://www.xerial.org/wiki/lecture/2010/Mercurial
+* 担当： 斉藤 太郎 (http://www.xerial.org/leo)
+
+
+= Mercurialでソースコードの変更履歴を保存する
+
+ソースコードの変更履歴を保存しておくことで、バグをコードに混入させてしまっても、以前のコードに戻すことができます。コードへの変更履歴をすべてデータベース中に保存しておくことができるので、不要なコードを削除したり、クラスの名前を付け替えるなど、大規模なコードの変更も安心して行えるようになります。
+
+例えば、森下研で開発されているゲノムブラウザ(UTGB)のソースコードは十万行を超える大規模なものですが、Mercurialのリポジトリで管理されています。
+* Google Codeに置いてあるUTGBのソースコード： http://code.google.com/p/utgb/source/list
+
+
+
+ソースコードだけでなく、論文の執筆などにも大活躍しますので、ぜひ使い方を覚えてください。
+
+
+== Mercurialのインストール
+
+Windowsから使う場合には、TortoiseHG: http://tortoisehg.bitbucket.org/ をインストールすると良いでしょう（GUIでMercurialが使えるようになりますが、コマンドラインからも使えるようにしておく方が日々の作業が早くなります）。その他のOSでは、hgコマンドで使えるようになります。
+
+* Mercurial: http://mercurial.selenic.com/
+
+
+
+Windowsでcygwinを使っている場合、インストールできるパッケージの中にMercurialも含まれています。そちらを使ってもよいでしょう。
+
+== 最低限の設定
+
+TortoiseHGは、Windowsのエクスプローラ画面 (Win+Eで起動)で、右クリックから使えます。
+[tortoisehg.png]
+
+まずTortoisHG - Global Settingsの画面を開きます。
+
+そして、以下のように自分の名前（full nameを使うのがよい）とe-mailアドレスを記述します。
+[username.png]
+
+
+あるいは、Mercurialの設定ファイル("$HOME/.hgrc")を直接編集してもよいです。Windowsでは、$HOMEは、"c:/Documents and Settings/(user name)" （場合によっては $HOME/Mercurial.ini かもしれません）。他のOSでは、"/home/(user name)"のフォルダです。以下のように編集します。
+<code>
+[ui]
+username = Taro L. Saito <leo@xerial.org>
+</code>
+
+== 簡単な使い方
+
+（以降の説明は、 http://mercurial.selenic.com/quickstart/  を参考に作成しています）
+
+=== 他の人のプロジェクトのコードを修正して、パッチ（差分）ファイルを作る
+
+<code>
+$ hg clone http://selenic.com/repo/hello
+$ cd hello
+$ (ファイルを編集する)
+$ hg add (新しいファイルを追加)
+$ hg commit -m 'My changes'
+$ hg export tip > patch.diff
+</code>
+
+このようにしてできたパッチファイルをソースコードの開発者に送ると喜ばれます。
+
+
+=== 自分のプロジェクトを作り、コミット（変更履歴を保存）してみる。
+
+<code>
+$ hg init (project-directory)
+$ cd (project-directory)
+$ hg add (追加するファイル)
+$ hg commit -m 'Initial commit'
+</code>
+
+
+
+== Mercurialの基本コマンド
+
+Mercurialでは、
+* リポジトリはファイルの変更履歴をすべて保存するので、いつでも以前の状態のファイルを参照できます。
+* リポジトリは、プロジェクトの一番上のフォルダ内にある.hgフォルダ内に保存されています
+
+
+Mercurialを使うために必要なコマンドは少ししかありません。
+
+*hg init:   新しいリポジトリ(.hgフォルダ)を作成する
+*hg commit:  ファイルへの変更をリポジトリに保存する
+*hg log: ファイルへの変更履歴を表示する
+*hg pull: 他のリポジトリの変更履歴を全て、現在のリポジトリに取り込む
+*hg push: 現在のリポジトリの変更履歴を全て、他のリポジトリに追加する
+*hg serve: 簡易ウェブサーバーを立ち上げて、http://localhost:8000 から、リポジトリの変更履歴の閲覧や、コードをpullしたりできるようになる
+*hg merge: 変更履歴の枝分かれを合流(merge)させる
+
+[repos.png]
+
+
+== コマンドの使い方がわからなくなったとき
+
+<code>
+$ hg help <command>
+</code>
+
+とすれば、ヘルプメッセージが表示されます。
+
+
+
+= Mercurialの動作を理解する
+
+== 1. Commitでchangesetを追加する (hg commit)
+Mercurialではコミットするたびに、変更(changeset)の履歴が作られます。
+[quickstart-c1.png]
+ここで、先端の履歴であるC3をheadと呼びます。また最新のchangesetをtipと呼んでいます。
+
+== 2. 他の人との共同作業 (hg clone, hg commit)
+
+もし、C1の時点で他の人がリポジトリのクローンを作り(hg clone)、独自に変更をコミット(hg commit)していくと、以下のようになります（C2', C3'をcommitした例）
+[quickstart-c2.png]
+この時点で、C2、C3については何も情報がありません
+
+== 3. 他のリポジトリの変更履歴を取り込む (hg pull)、あるいは変更履歴を送る(hg push)
+
+ここで、他のリポジトリの変更履歴を取りこむ(hg pull), あるいは、変更履歴を送る(hg push)したとき、以下のような枝分かれができます：
+[quickstart-pull.png]
+
+C1には2つの枝分かれした変更履歴があり、リポジトリには、C3とC3'の2つのheadがある状態になります。C3とC3'のどちらか新しい方がtipになります。
+
+== 4. 変更履歴を合流させる(hg merge)
+
+もし、枝分かれのchangesetがそれぞれ別のファイルを変更していた場合は、hg mergeで枝分かれを簡単に１つに合流できます：
+[quickstart-merge.png]
+
+もし、それぞれの分岐で同じファイルを編集していた場合、C2-C3, C2'-C3'での編集結果を同時に反映したファイルが作成される（元のファイルは.origという拡張子で保存される）ので、手でファイルを修正する必要があります。hg merge - (mergeされたファイルを必要なら修正) - hg commit (changeset Mが作成される)という手順です。
+
+Mercurialでは、枝分かれを残したままのpushは（できるだけ）しない文化になっています（逆にgitでは枝分かれをたくさん作ります）。ですので、枝分かれができた場合はmergeをするのが普通です。
+
+== 5. 覚えておくこと
+* hg commit は、新しいchangesetのノードを作ります。親のchangesetは、hg parentsで確認できます。
+* hg push, hg pullはchangesetのノードを、２つのリポジトリ間でやりとりします。
+* hg updateコマンドは、リポジトリの変更履歴を、working copyに反映させます。hg pull -uで、pullとupdateを同時に行います（mergeが必要なときは、updateされません。hg mergeを使いましょう）
+
+
+= その他のtips
+
+== ファイルを以前のrevisionの状態に戻す
+
+<code>
+$ hg revert -r(revision) (file)
+</code>
+
+== コミットする前に、手元のworking copyにどんな変更を加えたか確認する
+
+<code>
+$ hg diff 
+</code>
+で、変更した箇所の差分(diff format)が見られます。
+
+== working copyの状態を確認する
+
+<code>
+$ hg status
+</code>
+どのファイルがバージョン管理されていないか(hg addする前か)、修正されたファイルかなどの状態が確認できます。
+
+== .hgignoreファイルを編集して、commitやログを表示しないファイルを選ぶ
+
+例えば、binフォルダにコードをコンパイルしてできるバイナリが含まれていたり、*.oや*~のパターンにマッチするファイルは、リポジトリに追加したくない場合は、プロジェクトのトップフォルダ(.hgフォルダが含まれているフォルダ）に .hgignoreという名前でファイルを追加(hg add, hg commit)します。
+<code>
+bin
+
+syntax:glob
+*.o
+*~
+</code>
+
+== Mergeの際に更新の衝突が起こった場合の対処
+
+2人が同時に同じファイルを編集した場合、hg merge時に、conflictという状態になります。
+* hg merge
+** ここでconflictが発生したとする 
+* 手作業で編集 (どちらの更新、あるいは両方の結果を反映させるかユーザーが決める）
+* hg resolve -m (conflict file name)
+
+* hg commit
+
+= 参考
+==Mercurialの使い方のドキュメント
+
+* Mercurial Quick Start: http://mercurial.selenic.com/quickstart/
+* Hg Init: http://hginit.com
+
+* Mercurial Cheet Sheets http://mercurial.selenic.com/wiki/QuickReferenceCardsAndCheatSheets
+** Mercurialの使い方のポスター
+
+== Mercurialリポジトリサービスを使う
+* butbucket http://bitbucket.org/
+** オープンソースにするなら、無料で使えます。
+
+== 自分のサーバーに、Mercurialのリポジトリサーバーを構築する
+
+* mercurial-serverが便利です  http://www.lshift.net/mercurial-server.html
+
+
+
+== 他のバージョン管理システム
+
+* Git (ギットと読む)  http://git-scm.com/
+** Linuxのkernelのソースコードの開発管理のために作られたツール。Gitの使い方にはコード開発の文化的なものがあるので、一度本を通して読んだ方がよい。慣れれば使うべきコマンドの種類はMercurialと同じ程度
+
+* Subversion (SVN) http://subversion.tigris.org/
+** MercurialやGitが苦手とする、数十MB程度の大きなファイルや、多数のプロジェクト管理でも使える(apache software foundationなどのプロジェクト群はSVNで管理されていることが多い）。Mercurial, Gitと違い、リポジトリのコピーが作られないため、コードのcommit、mergeが大変になりがち。それでも、SVNを使って管理されているソースコードは多い。
+
+

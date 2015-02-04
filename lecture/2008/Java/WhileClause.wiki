@@ -1,0 +1,32 @@
+@title("While文")
+
+= while文による反復処理
+
+while文を使うと、ある条件が満たされている間だけ処理を実行する、というプログラムを書くことができます。
+
+<code>
+int product = 2;
+while(product <= 1000)
+{
+   product = product * 2;
+   System.our.println(product);
+}
+</code>
+この例では、product(積）が1000以下の間は、productの値を二倍し続けます。
+
+<code>
+4
+8
+16
+32
+64
+128
+256
+512
+1024
+</code>
+
+
+
+
+

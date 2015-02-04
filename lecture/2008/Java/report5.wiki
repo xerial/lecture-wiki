@@ -1,0 +1,120 @@
+@title("レポート課題5")
+= レポート課題5 ゲノム配列のreverse strand
+
+ACGTからなるゲノム配列 s を表すクラスGenomeSequenceを実装し、配列の相補鎖(complement)を求めるメソッドgetComplementと、逆相補鎖(reverse complement)を返すメソッドgetReverseComplementを実装せよ。
+
+* 以下に示すGenomeSequenceTestのJUnitテストがパスする（成功する）ことを確認すること。
+* 実装したコードは テストコードも含めた[jar JARファイルとして]提出すること。
+
+== 相補鎖
+配列の各文字を以下のように変換すると相補鎖が求められる。
+<code>
+A -> T
+T -> A
+G -> C
+C -> G
+</code> 
+
+逆相補鎖はさらに相補鎖を逆順に並べ替えたもの。
+
+<code>
+配列       ATGCGT
+相補鎖     TACGCA
+逆相補鎖   ACGCAT
+</code>
+
+== GenomeSequence.java
+<code>
+public class GenomeSequence {
+   private String sequence;
+
+   public GenomeSequence(String sequence) {
+      this.sequence = sequence;
+   }
+   public String getSequence() {
+      return sequence;
+   }
+
+   public String getComplement() {
+       // TODO 実装
+       return null;
+   }
+
+   public String getReverseComplement() {
+       // TODO 実装
+       return null;
+   }
+}
+</code>
+
+
+==テストコード GenomeSequenceTest.java
+<code>
+import static org.junit.Assert.*;
+import org.junit.Test;
+
+public class GenomeSequenceTest {
+
+  @Test
+  public void testGenomeSequence() {
+    GenomeSequence s = new GenomeSequence("ACGT");
+  }
+
+  @Test
+  public void testGetSequence() {
+    GenomeSequence s = new GenomeSequence("ACGT");
+    assertEquals("ACGT", s.getSequence());
+  }
+
+  @Test
+  public void testComplement() {
+    GenomeSequence s = new GenomeSequence("ATGCGT");
+    assertEquals("TACGCA", s.getComplement());
+  }
+
+  @Test
+  public void testReverseStrand() {
+    GenomeSequence s = new GenomeSequence("ATGCGT");
+    assertEquals("ACGCAT", s.getReverseComplement());
+  }
+}
+</code>
+
+
+== 注意: 文字列の並び替え
+
+文字列の並び替えを行うときに+演算を使うと非常に効率が悪い。
+
+たとえば、以下の命令は、
+<code>
+ s += "A";
+ s += "C";
+</code>
+
+内部では次のように実行されている。
+<code>
+StringBuilder tmp = new StringBuilder();
+tmp.append(s);
+tmp.append("A");
+s = tmp.toString();
+
+StringBuilder tmp2 = new StringBuilder();
+tmp2.append(s);
+tmp2.append("C");
+s = tmp.toString();
+</code>
+配列s全体のコピー(append)が２回も発生しているため、無駄が多い。
+
+効率を上げるために、最初からStringBuilderを使うとよい。
+<code>
+StringBuilder buf = new StringBuilder();
+buf.append("A");
+buf.append("C");
+...
+String result = buf.toString();
+</code>
+
+
+
+
+

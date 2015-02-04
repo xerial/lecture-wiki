@@ -1,0 +1,97 @@
+@title("Java Swing")
+= SwingでGUIアプリケーションを作成する
+
+Javaには、Swingライブラリと呼ばれるGUI(Graphical User Interface)アプリケーションを作成するためのライブラリが含まれています。以下のプログラムを実行すると、GUIのウィンドウが開きます。
+
+[image/helloswing.png]
+
+===HelloSwing.java
+<code>
+import java.awt.Dimension;
+import java.awt.Toolkit;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
+public class HelloSwing {
+  public static void main(String[] args) {
+    // フレームを生成
+    JFrame frame = new JFrame("Hello Swing");
+    // フレームにラベルを追加
+    JLabel label = new JLabel("Hello Swing!");
+    frame.getContentPane().add(label);
+    // ウインドウが閉じられたときにアプリケーションを終了する
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    // frameの内容に合わせて、frameのサイズを調整
+    frame.pack();
+
+    // 画面中央付近に表示位置を設定
+    Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+    frame.setLocation((int) d.getWidth() / 2, (int) d.getHeight() / 2);
+    // フレームを表示させる
+    frame.setVisible(true);
+  }
+}
+</code>
+
+== ライブラリに慣れる
+
+Swingは非常に巨大なライブラリですが、GUIを作成するのに必要な部品、イベント処理(ボタンがクリックされた、テキストが変更されたときに実行するコード）などの仕組みを踏まえておけば、あとは、細かな使い方はリファレンスを見ながら開発を進めることができます。Eclipseのコード補完(Ctrl + Space)だけでも、大抵のことはわかりますが、Swingを実際に使ったサンプルコードを見るが早道でしょう。
+* http://java.sun.com/docs/books/tutorial/uiswing/index.html
+
+== Swingのコンポーネント
+* Componentギャラリー http://java.sun.com/docs/books/tutorial/ui/features/components.html
+
+* Componentの使い方 http://java.sun.com/docs/books/tutorial/uiswing/components/componentlist.html
+
+（以下の画像はJava Tutorialより抜粋)
+[image/swingcomp.png]
+
+[image/swing-frame.png]
+
+[image/swing-table.png]
+
+
+ここで紹介した以外にもコンポーネントはまだまだ沢山あります。
+
+== イベント処理
+
+ユーザーがボタンを押したり、テキストを変更したりしたときの処理は、addActionListenerなどのListenerクラスを各コンポーネントに追加してあげることで定義できます。
+
+<code>
+JButton button = new JButton("button");
+button.addActionListener(new ActionListener(){
+  public void actionPerformed(ActionEvent e) {
+     // ボタンを押したときの処理
+  } 
+});
+</code>
+
+== Componentの配置
+
+JPanel内などに、コンポーネントをどのように配置するかを指定するには、レイアウトを指定する必要があります。
+
+* Layoutガイド http://java.sun.com/docs/books/tutorial/uiswing/layout/visual.html
+
+縦１列にボタンを並べる例
+<code>
+JPanel listPane = new JPanel();
+
+// panel中の
+listPane.setLayout(new BoxLayout(listPane, BoxLayout.Y_AXIS));
+
+listPane.add(new JButton("button1"));
+listPane.add(new JButton("button2"));
+listPane.add(new JButton("button3"));
+listPane.add(new JButton("button4"));
+
+JFrame frame = new JFrame("Layout Demo");
+frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+frame.getContentPane().add(listPane);
+
+frame.pack();
+frame.setVisible(true);
+</code>
+

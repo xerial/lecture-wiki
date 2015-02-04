@@ -1,0 +1,150 @@
+@title("レポート課題6")
+= レポート課題6 ゲノム配列の管理
+
+オブジェクトと、データ構造をふんだんに使う演習です。配布資料から若干変更がありますので注意。
+
+=== GenomeSequenceクラスの拡張
+* [report5 レポート課題5]のGenomeSequenceクラスを、配列に名前をつけられるように拡張せよ。
+
+=== SequenceContainerの作成
+* 複数のGenomeSequenceを内部に保存するクラス SequenceContainerを作成せよ。
+* SequenceContainerには、特定の名前の配列を取り出す
+<code>
+public GenomeSequence find(String sequenceName) { ... } 
+</code>
+というメソッドを実装せよ。内部に保持しているGenomeSequenceのリストの{b|全探索による実装は不可}。
+
+=== SequenceContainer内のデータの操作
+
+* SequenceContainerから、配列名の辞書順にGenomeSequenceを並べ替えるメソッドorderBySequenceName()を作成せよ。
+* SequenceContainer内のGenomeSequenceを、配列の長さ順に並び替えるメソッドorderBySequenceLength()を作成せよ。
+** ただし、{b|長さが等しい配列は、配列名の辞書順}に並べること
+
+
+=== SequenceContainerのテスト
+* 上記のメソッドが正しく実装できていると、SequenceContainerTestのJUnitテストをパスできる
+
+
+=== 提出方法
+作成したプログラムはソースコード（テストコードを含む）[Jar Jarファイル]の形にして投稿すること。
+
+== GenomeSequence.java
+<code>
+public class GenomeSequence {
+   private Strign name;
+   private String sequence;
+
+   public GenomeSequence(String name, String sequence) {
+      this.name = name;    
+      this.sequence = sequence;
+   }
+
+   public String getSequence() {  
+      return sequence;
+   }
+
+   public String getName() {  
+      return name;
+   }
+  (以下、省略)
+}
+</code>
+
+== SequenceContainer.java
+<code>
+// GenomeSequenceを保持するためのコンテナ
+public class SequenceContainer {
+
+　 // GenomeSequenceを追加
+   public void add(GenomeSequence seq) {
+     // TODO 実装 
+   }  
+　 // nameと一致するGenomeSequenceを検索
+   public GenomeSequence find(String sequenceName) {
+     // TODO 実装 
+   }  
+
+   public List<GenomeSequence> orderBySequenceName() {
+     // TODO 実装 
+   }
+
+   public List<GenomeSequence> orderBySequenceLength() {
+     // TODO 実装 
+   }
+}
+</code>
+
+== SequenceContainerTest.java
+このJUnitテストコードが動作すればよい
+<code>
+import static org.junit.Assert.*;
+
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+
+
+public class SequenceContainerTest {
+
+	private SequenceContainer sequenceContainer;
+
+	@Before
+	public void setUp()
+	{
+		// 各テストを実行するまえに、必ずこのメソッドが１度呼ばれる
+		sequenceContainer = new SequenceContainer();
+		sequenceContainer.add(new GenomeSequence("seq0001", "AATTGG"));
+		sequenceContainer.add(new GenomeSequence("seq0003", "TAG"));
+		sequenceContainer.add(new GenomeSequence("seq0002", "CCGGGCC"));
+		sequenceContainer.add(new GenomeSequence("seq0010", "CGTTT"));
+		sequenceContainer.add(new GenomeSequence("seq000A", "ACGTT"));
+	}
+
+	@Test
+	public void testFind() {
+		GenomeSequence s1 = sequenceContainer.find("seq0001");
+		assertNotNull(s1);
+		assertEquals("seq0001", s1.getName());
+		assertEquals("AATTGG", s1.getSequence());
+		
+		GenomeSequence s2 = sequenceContainer.find("seq0002");
+		assertNotNull(s2);
+		assertEquals("seq0002", s2.getName());
+		assertEquals("CCGGGCC", s2.getSequence());
+
+		GenomeSequence s3 = sequenceContainer.find("seqABCD");
+		assertNull(s3);
+		
+	}
+	
+	@Test
+	public void testOrderBySequenceName()
+	{
+		List<GenomeSequence> orderedSequence = sequenceContainer.orderBySequenceName();
+		assertEquals(5, orderedSequence.size());
+		String[] answerList = {"seq0001", "seq0002", "seq0003", "seq000A", "seq0010"};
+		int index = 0;
+		for(String sequenceName : answerList)
+			assertEquals(sequenceName, orderedSequence.get(index++).getName());
+	}
+
+	@Test
+	public void testOrderBySequenceLength()
+	{
+		List<GenomeSequence> orderedSequence = sequenceContainer.orderBySequenceLength();
+		assertEquals(5, orderedSequence.size());
+		
+		// 配列の長さが同じときは、配列名の辞書順に並べること
+		String[] answerList = {"seq0003", "seq000A", "seq0010", "seq0001", "seq0002"};
+		int index = 0;
+		for(String sequenceName : answerList)
+			assertEquals(sequenceName, orderedSequence.get(index++).getName());
+	}
+
+}
+</code>
+
+
+
+

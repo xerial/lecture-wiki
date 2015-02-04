@@ -1,0 +1,92 @@
+@title("SQLiteデータベースを使う")
+
+= SQLite JDBC
+
+SQLite JDBC (http://www.xerial.org/trac/Xerial/wiki/SQLiteJDBC )は、JavaプログラムからSQLiteデータベースシステムを使うためのツールです。
+
+== SQLite JDBCライブリのダウンロード
+[http://www.xerial.org/maven/repository/artifact/org/xerial/sqlite-jdbc/ ダウンロードサイト] から最新版のライブラリ(jarファイル)をダウンロードします。2008年8月現在の最新版は、
+
+http://www.xerial.org/maven/repository/artifact/org/xerial/sqlite-jdbc/3.6.0/sqlite-jdbc-3.6.0.jar
+
+です。これを、プロジェクト内に保存します。
+
+== クラスパスの設定
+外部ライブラリを使用するためには、jarファイルをclasspathに追加する必要があります。プロジェクトフォルダ内の sqlite-jdbc-3.6.0.jar ファイルの上で右クリック - Build Path - Add to Build Pathを選択し、ライブラリをクラスパスに追加します。 
+[image/jdbc-add.png]
+
+追加後
+[image/after-add.png]
+
+=== SQLiteAccessSample.java
+<code>
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+
+public class SQLiteAccessSample
+{
+  public static void main(String[] args) throws ClassNotFoundException
+  {
+    // SQLiteのJDBCドライバの読み込み
+　　// SQLite特融のコードはこの１行のみ
+    Class.forName("org.sqlite.JDBC");
+    
+    Connection connection = null;
+    try
+    {
+      // sample.dbというSQLiteデータベースファイルに接続
+      connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
+      
+      // SQL文を準備
+      Statement statement = connection.createStatement();
+      // 検索・更新がなかなか終わらないときは30秒で打ち切る設定
+      statement.setQueryTimeout(30);  
+
+      // personというテーブルが存在していたら消す      
+      statement.executeUpdate("drop table if exists person");
+
+      // 新しいpersonテーブルを作成
+      statement.executeUpdate("create table person (id integer, name string)");
+      // personテーブルにデータを追加
+      statement.executeUpdate("insert into person values(1, 'leo')");
+      statement.executeUpdate("insert into person values(2, 'yui')");
+
+      // personテーブルの全ての行を取得するクエリ。ResultSetは検索結果のiteratorの役割
+      ResultSet rs = statement.executeQuery("select * from person");
+      while(rs.next())				      
+      {
+        // 検索結果の各行のデータを取り出す
+        System.out.println("name = " + rs.getString("name"));
+        System.out.println("id = " + rs.getInt("id"));
+      }
+    }
+    catch(SQLException e)
+    {
+      // if the error message is "out of memory", 
+      // it probably means no database file is found
+      System.err.println(e.getMessage());
+    }
+    finally
+    {
+      try
+      {
+      　// connectionを忘れずに閉じる
+        if(connection != null)
+          connection.close();
+      }
+      catch(SQLException e)
+      {
+        // connection close failed.
+        System.err.println(e);
+      }
+    }
+  }
+}
+</code>
+
+
+

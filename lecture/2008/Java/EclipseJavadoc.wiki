@@ -1,0 +1,12 @@
+@title("Eclipseのヘルプ機能")
+
+== Eclipseのヘルプ機能を使う
+
+たとえば、StringBuilderの使い方を知りたい場合は、
+<code>
+StringBuilder buf = new StringBuilder();
+</code>
+の、StringBuilderの文字の上で、shift+F2を押すと、ブラウザ上で、該当するJava APIのページが開きます。
+
+[image/viewjavadoc.png]
+
